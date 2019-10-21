@@ -9,7 +9,7 @@
 #' can be specified as a vector holding the discretized function object or,
 #' alternatively, as an expansion of a given basis system. Defaults to the zero function.
 #'
-#' @param type Which test to use. Currently, the following alternatives are available:
+#' @param type Which test to use. Currently, the following alternatives are available: "F" (see Kong et al. 2016)
 #' 
 #' @export
 GlobalTest <- function(obj, alternative, type,...){
