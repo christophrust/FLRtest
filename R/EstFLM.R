@@ -24,7 +24,6 @@
 #'
 #' @author Christoph Rust
 #' @keywords FDA, smoothing splines, regression
-#' @importFrom stats pnorm
 #'
 #' @export
 EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NULL), intercept = TRUE){
@@ -37,16 +36,22 @@ EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NU
     p <- dim(X)[2]
     grd <- seq(0, 1, length.out = p)
 
-    if (intercept){
-        X <- cbind(X,1)
-    }
+
     if (model$type == "smoothspline") {
 
         ## basis and Amat
         splMat <- natSplBasis(grd)
+
+        
+        if (intercept){
+            X <- cbind(X,1)
+            splMat$A_m <- rbind( cbind(splMat$A_m,0),0)
+        }
+        
         
         if (!is.null(model$rho)) {
 
+            rho <- model$rho
             NPXtX <- crossprod(X) * 1/(Nobs * p)
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
             
@@ -63,12 +68,13 @@ EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NU
             NPXtX <- crossprod(X) * 1/(Nobs * p)
 
             dfGivenRho <- function(x) {
-                XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + x * splMat$A_m)) %*% t(X)
+                XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + exp(x) * splMat$A_m)) %*% t(X)
                 sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
             }
-            rho <- uniroot( function(x) {dfGivenRho(x) - df},lower  = 0, upper = 10e6, f.lower = p,
-                           extendInt = "downX")
 
+            rho <- exp(uniroot( function(x) {dfGivenRho(x) - model$df},lower  = -100, upper = 100, f.lower = p,
+                               extendInt = "downX")$root)
+            
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
             
             ## solution for all parameters
@@ -95,13 +101,15 @@ EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NU
 
     ## return stuff
     obj <- list(
-        coeficients =
+        coefficients =
             list(beta = beta[1:p],
                  intercept = if(intercept) beta[p + 1] else NULL),
         residuals = y - yHat,
         fitted = yHat,
         model = list(effDf = effDf,
-                     rho = rho)
+                     rho = rho,
+                     intercept = intercept),
+        data = list(y=y, X=X)
     )
     
     class(obj) <- "flm"
