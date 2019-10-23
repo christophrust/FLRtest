@@ -22,12 +22,12 @@
 #'  Parameters of the model fit.
 #' }
 #'
-#' @author Johann Eppelsheimer, Christoph Rust
+#' @author Christoph Rust
 #' @keywords FDA, smoothing splines, regression
 #' @importFrom stats pnorm
 #'
 #' @export
-EstFLM <- function(y,X, model = list(type = "smoothspline", df = NULL){
+EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NULL), intercept = TRUE){
 
 
     if (missing(X)) stop("No functional predictors specified.")
@@ -35,163 +35,75 @@ EstFLM <- function(y,X, model = list(type = "smoothspline", df = NULL){
 
     Nobs <- length(y)
     p <- dim(X)[2]
+    grd <- seq(0, 1, length.out = p)
 
-}
-
-oldfun <-function(
-    y, Curves = NULL, ScalarPred = NULL, lostDF = 0,
-                                clusterVar = NULL, clusterType = NULL, rho = 1e-6 ,intercept = TRUE) {
-
-    
-    if (is.null(Curves) && is.null(ScalarPred)) stop("No predictor variables specified.")
-
-
-    Nobs <- length(y)
-    
-
-    
-    if (!is.null(Curves)) {
-        ## grid where functions are evaluated
-        p <- if (is.matrix(Curves)) dim(Curves)[2] else dim(Curves[[1]])[2]
+    if (intercept){
+        X <- cbind(X,1)
     }
-    ## design matrix
-    if (intercept || !is.null(ScalarPred)){
-        Xvars <- if (intercept) {
-                     if (!is.null(ScalarPred)) {
-                         as.matrix(cbind(1, as.matrix(ScalarPred)))
-                     } else {
-                         matrix(1, nrow = Nobs, ncol = 1)
-                     }
-                 } else {
-                     as.matrix(ScalarPred)
-                 }
-    } else {
-        Xvars <- NULL
-    }
-    if (intercept) colnames(Xvars)[1] <-"Constant"
-    Xfull <- cbind(if (is.null(Curves)) NULL else if (is.matrix(Curves)) Curves else do.call(cbind, Curves),
-                   p * Xvars)
+    if (model$type == "smoothspline") {
 
-    
-    Yfull <- y
-    
-    dimen <- ncol(Xfull)
-    Afull <- matrix(0, ncol = dimen, nrow = dimen)
-
-    ## spline Basis and Amat
-    if (!is.null(Curves)) {
-
+        ## basis and Amat
+        splMat <- natSplBasis(grd)
         
-        ## check for correct input
-        if (is.list(Curves)){
-            dims <- vapply(Curves , dim, numeric(2))
-            if (any(dims[2,] != p) || any(dims[1,] != Nobs)) stop("Elements in 'Curves' have different dimensions!")
-        }
-        
-        if (!is.null(ScalarPred) && dim(ScalarPred)[1] != Nobs) stop("'ScalarPred' has wrong number of observations")
-        
-        grd <- seq(0, 1, len = p)
+        if (!is.null(model$rho)) {
 
-        
-        splMat <- calSecDerNatSpline(grd)
-        if (is.matrix(Curves)) {
-            Afull[1:p,1:p] <- splMat[["A_m"]]
-            ScPredStartIdx <- p+1
-        } else{
-            for (i in 0:(length(Curves)-1)) Afull[i*p + 1:p, i*p + 1:p] <- splMat[["A_m"]]
-            ScPredStartIdx <- length(Curves) * p +1
-        }
-    } else {
-        ScPredStartIdx <- 1
-    }
-    
-    NPXtX <- crossprod(Xfull) * 1/(Nobs * p)
-    XtX1Xt <- (XtX1 <- 1/Nobs * chol2inv( chol( NPXtX + rho * Afull))) %*% t(Xfull)
-
-    ## solution for all parameters
-    beta_full <- XtX1Xt %*% Yfull
-    
-    
-    ## number of effective degrees of freedom
-    effDf <- sum(vapply(1:Nobs, function(i)  sum(Xfull[i,] * XtX1Xt[,i]),0))/p
-    
-    yHat <- Xfull %*% (beta_full * 1/p)
-    
-    ## variance of estimator
-    if (is.null(clusterVar)){
-        ssr <- sum( (resid <- Yfull - yHat)^2)
-        var_beta <- diag( tcrossprod(XtX1Xt) ) * 1/(Nobs - lostDF - effDf) * ssr   # also substract DF form FE-estimates ('lostDF')
-    } else {
-        if (is.null(clusterType) || clusterType == "LZ"){
-            ## LZ cluster version, see AbadieAtheyImbensWoolridge, eq. 2.3
-            resid <- as.vector(Yfull - yHat)
+            NPXtX <- crossprod(X) * 1/(Nobs * p)
+            XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
             
-            ##XtOmegaX <- rowSums(vapply(unique(clusterVar), function(c){
-            ##    idx <- (clusterVar == c)
-            ##    tcrossprod(colSums(resid[idx] * Xfull[idx,,drop=FALSE]))
-            ##}, matrix(0,dimen,dimen)), dims = 2)
-            #XtOmegaX <- RobClusterSEs(resid, Xfull, clusterVar, unique(clusterVar))
-            srtIdx <- order(clusterVar)
-            uCl <- sort(unique(clusterVar))
-            clustersAndTimes <- cbind(as.integer(uCl), as.integer(tabulate(clusterVar))[uCl])
-            XtOmegaX <- RobClusterSEs( resid[srtIdx], Xfull[srtIdx,], clustersAndTimes)
+            ## solution for all parameters
+            beta <- XtX1Xt %*% y
+            
+            ## number of effective degrees of freedom
+            effDf <- sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
+            
+            yHat <- X %*% beta * 1/p
+        } else if (!is.null(model$df)){
 
-            var_beta <- diag(XtX1 %*% XtOmegaX %*% XtX1)
-        } else if (clusterType == "EHW"){
-            ## Eicker-Huber-White
-            resid <- as.vector(Yfull - yHat)
-            XtOmegaX <- rowSums(vapply(1:length(resid), function(i){
-                tcrossprod(resid[i] * Xfull[i,, drop = FALSE])
-            }, matrix(0,dimen,dimen)), dims = 2)
-            var_beta <- diag(XtX1 %*% XtOmegaX %*% XtX1)
-        } else if (clusterType =="KLOEK"){
-            resid <- as.vector(Yfull - yHat)
+            ## find rho s.t. effdf == df
+            NPXtX <- crossprod(X) * 1/(Nobs * p)
+
+            dfGivenRho <- function(x) {
+                XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + x * splMat$A_m)) %*% t(X)
+                sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
+            }
+            rho <- uniroot( function(x) {dfGivenRho(x) - df},lower  = 0, upper = 10e6, f.lower = p,
+                           extendInt = "downX")
+
+            XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
+            
+            ## solution for all parameters
+            beta <- XtX1Xt %*% y
+            
+            ## number of effective degrees of freedom
+            effDf <- sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
+            
+            yHat <- X %*% beta * 1/p
             
         } else {
-            stop("clusterType = '", clusterType, "' is not valid clustering version!")
+            ## use GCV to find optimal rho
+            ## ... tbd
         }
-    }
         
-    ## summary table of ScalarPredictors coefficients
-    if (!is.null(ScalarPred)){
-        coefs <- beta_full[ScPredStartIdx:length(beta_full)]
-        coefsVar <- var_beta[ScPredStartIdx:length(beta_full)]
-        coefm <- matrix(NA, ncol = 4 , nrow = length(coefs))
-        coefm[,1] <- coefs
-        coefm[,2] <- sqrt(coefsVar)
-        coefm[,3] <- coefm[,1]/coefm[,2]
-        coefm[,4] <- 1 - 2 * pnorm( abs(coefm[,3]))
-        colnames(coefm) <- c("Estimate", "Std. Error", "t vlaue" , "Pr(>|t|)")
-        rownames(coefm) <- colnames(Xvars)
-    } else coefm <- NULL
-    
-    
-    ## construct beta
-    if (is.null(Curves)){
-        beta <- NULL
-    } else if (is.matrix(Curves)){
-        beta <- list(slope = beta_full[1:p],
-                     StdErr = sqrt(var_beta[1:p]))
-    } else {
-        beta <- lapply(1:length(Curves) , function(i){
-            list(slope = beta_full[(i-1)*p + 1:p],
-                 StdErr = sqrt(var_beta[(i-1)*p + 1:p]))
-        })
-        names(beta) <- if (!is.null(names(Curves))) names(Curves) else paste0("Curves.",1:length(Curves))
+        
+    } else if (model$type == "fpc"){
+
+        ## tbd
+        
+    } else{
+        stop(sprintf("type '%s' not a valid estimation specification!", model$type))
     }
-    
-    
-    
-    ## return summary, yHat and plot
+
+    ## return stuff
     obj <- list(
-        coefficients = list(coefm = coefm,
-                            beta = beta),
-        residuals = resid,
+        coeficients =
+            list(beta = beta[1:p],
+                 intercept = if(intercept) beta[p + 1] else NULL),
+        residuals = y - yHat,
         fitted = yHat,
-        model = list(effDf = effDf - if (!is.null(coefm)) dim(coefm)[1] else 0, rho = rho, intercept = intercept))
-                                        #gcvVal = opt$value,
-                                        #rho = optPar))
-    class(obj) <- "SmSplFLR"
+        model = list(effDf = effDf,
+                     rho = rho)
+    )
+    
+    class(obj) <- "flm"
     obj
 }
-

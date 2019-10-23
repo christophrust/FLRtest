@@ -1,0 +1,13 @@
+Package: FLRtest
+Type: Package
+Title: Directed Test in Functional Linear Regression
+Version: 1.2
+Date: 2017-07-21
+Author: Christoph Rust [aut , cre]
+Maintainer: Christoph Rust <christoph.rust@ur.de>
+Description: This package provides an implementation for the directed testing procedure described in Rust, C. (2020).
+License: GPL-3
+Depends: R (>= 3.1.0) , splines
+NeedsCompilation: no
+Packaged: 2017-08-21 12:52:03 UTC; cgr
+RoxygenNote: 6.1.0
