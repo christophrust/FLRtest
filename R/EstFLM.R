@@ -26,7 +26,7 @@
 #' @keywords FDA, smoothing splines, regression
 #'
 #' @export
-EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NULL), intercept = TRUE){
+EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho = NULL, cpv=NULL){
 
 
     if (missing(X)) stop("No functional predictors specified.")
@@ -93,7 +93,36 @@ EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NU
         
     } else if (model$type == "fpc"){
 
-        ## tbd
+        ## spectral decomposition
+        Cov <- cov(X)
+        eigendec <- eigen(Cov)
+        
+        if (!is.null(df)){
+            ## scale by sqrt(p) to be of length 1 in L^2 norm
+            efuncs <- eigendec$vectors[,1:df, drop = FALSE] * sqrt(p)
+            
+        } else if (!is.null(cpv)){
+            cumvals <- vapply(1:length(eigendec$values),
+                              function(k) sum(eigendec$values[1:k])/sum(eigendec$values))
+            K <- which.max( cumvals > cpv)
+            efuncs <- eigendec$vectors[,1:K, drop = FALSE] * sqrt(p)
+        } else {
+            ## automatic selection tbd
+            ## ...
+        }
+
+        scores <- X %*% efuncs * 1/p
+
+
+        ## estimate approx. model
+        lmEst <- .lm.fit(x = if(intercept) cbind(1,scores) else scores,
+                         y = y)
+        xi <- lmEst$coefficients
+        yHat <- (if (intercept) cbind(1,scores) else scores) %*% xi
+
+        ## recover curve
+        beta <- efuncs %*% xi
+        
         
     } else{
         stop(sprintf("type '%s' not a valid estimation specification!", model$type))
@@ -106,9 +135,11 @@ EstFLM <- function(y, X, model = list(type = "smoothspline", df = NULL, rho = NU
                  intercept = if(intercept) beta[p + 1] else NULL),
         residuals = y - yHat,
         fitted = yHat,
-        model = list(effDf = effDf,
+        model = list(intercept = intercept,
+                     type = type,
+                     effDf = effDf,
                      rho = rho,
-                     intercept = intercept),
+                     cpv = cpv),
         data = list(y=y, X=X)
     )
     
