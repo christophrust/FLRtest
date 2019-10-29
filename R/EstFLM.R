@@ -37,7 +37,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
     grd <- seq(0, 1, length.out = p)
 
 
-    if (model$type == "smoothspline") {
+    if (type == "smoothspline") {
 
         ## basis and Amat
         splMat <- natSplBasis(grd)
@@ -49,9 +49,8 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         }
         
         
-        if (!is.null(model$rho)) {
+        if (!is.null(rho)) {
 
-            rho <- model$rho
             NPXtX <- crossprod(X) * 1/(Nobs * p)
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
             
@@ -62,7 +61,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
             effDf <- sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
             
             yHat <- X %*% beta * 1/p
-        } else if (!is.null(model$df)){
+        } else if (!is.null(df)){
 
             ## find rho s.t. effdf == df
             NPXtX <- crossprod(X) * 1/(Nobs * p)
@@ -72,7 +71,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
                 sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
             }
 
-            rho <- exp(uniroot( function(x) {dfGivenRho(x) - model$df},lower  = -100, upper = 100, f.lower = p,
+            rho <- exp(uniroot( function(x) {dfGivenRho(x) - df},lower  = -100, upper = 100, f.lower = p,
                                extendInt = "downX")$root)
             
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
@@ -91,7 +90,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         }
         
         
-    } else if (model$type == "fpc"){
+    } else if (type == "fpc"){
 
         ## spectral decomposition
         Cov <- cov(X)
@@ -100,10 +99,11 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         if (!is.null(df)){
             ## scale by sqrt(p) to be of length 1 in L^2 norm
             efuncs <- eigendec$vectors[,1:df, drop = FALSE] * sqrt(p)
+            K <- df
             
         } else if (!is.null(cpv)){
             cumvals <- vapply(1:length(eigendec$values),
-                              function(k) sum(eigendec$values[1:k])/sum(eigendec$values))
+                              function(k) sum(eigendec$values[1:k])/sum(eigendec$values),0)
             K <- which.max( cumvals > cpv)
             efuncs <- eigendec$vectors[,1:K, drop = FALSE] * sqrt(p)
         } else {
@@ -121,7 +121,9 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         yHat <- (if (intercept) cbind(1,scores) else scores) %*% xi
 
         ## recover curve
-        beta <- efuncs %*% xi
+        beta <- efuncs %*% (if(intercept) xi[-1] else xi)
+
+        effDf <- ncol(efuncs)
         
         
     } else{
@@ -139,8 +141,12 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
                      type = type,
                      effDf = effDf,
                      rho = rho,
-                     cpv = cpv),
-        data = list(y=y, X=X)
+                     cpv = cpv,
+                     fpca = if (type=="fpc") list(efuncs = efuncs,
+                                 evals = eigendec$values,
+                                 K = K) else NULL
+                     ),
+        data = list(y=y, X=X[,-ncol(X)])
     )
     
     class(obj) <- "flm"
