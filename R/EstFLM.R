@@ -3,13 +3,22 @@
 #' Estimate a functional linear model
 #'
 #' @param y Dependent variable, a numeric vector of length N.
-#' @param X A N times p matrix holding the functional predictors (one curve per row)
-#' @param model A list containing entries \code{type} (either \code{"smoothspline"} or \code{"fpc"} and \code{df},
-#' the latter controls flexibility of the fit (either number of eigenfunctions or edf).
+#'
+#' @param X A N times p matrix holding the functional predictors
+#' (one curve per row), assuming an equidistant grid of length
+#' \code{p}.
+#'
+#' @param model A list containing entries \code{type} (either
+#' \code{"smoothspline"} or \code{"fpc"} and \code{df},
+#' the latter controls flexibility of the fit (either number
+#' of eigenfunctions or edf).
+#'
 #' @param intercept Logical, if TRUE, an intercept is included in the model.
 #'
-#' @return A list containing estimation results with the following entries:
-#' \item{coefficients}{Estimated coefficients, a list with entries \code{coefm} (coefficient matrix),
+#' @return A list containing estimation results with the
+#' following entries:
+#' \item{coefficients}{Estimated coefficients, a list
+#' with entries \code{coefm} (coefficient matrix),
 #' \code{beta} (beta function) and \code{beta_sd} (pointwise standard errors).
 #' }
 #' \item{residuals}{
@@ -50,7 +59,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         
         
         if (!is.null(rho)) {
-
+            
             NPXtX <- crossprod(X) * 1/(Nobs * p)
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
             
@@ -144,9 +153,11 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
                      cpv = cpv,
                      fpca = if (type=="fpc") list(efuncs = efuncs,
                                  evals = eigendec$values,
-                                 K = K) else NULL
+                                 K = K) else NULL,
+                     smspl = if (type=="smoothspline") list(npXtX = NPXtX,
+                                  A_m = splMat$A_m) else NULL
                      ),
-        data = list(y=y, X=X[,-ncol(X)])
+        data = list(y=y, X=X[,-ncol(X), drop = FALSE])
     )
     
     class(obj) <- "flm"
