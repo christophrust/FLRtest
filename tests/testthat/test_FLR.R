@@ -12,10 +12,7 @@ y <- X %*% beta/p + rnorm(N, sd=0.1)
 res <- EstFLM(y, X, type = "smoothspline", rho = 0.00000001, intercept = TRUE)
 res1 <- EstFLM(y, X, type = "fpc", cpv = 0.99, intercept = TRUE)
 
-matplot(y = cbind(beta, res$coefficient$beta,res1$coefficient$beta), x = grd, t = "l")
-
-
-
+##matplot(y = cbind(beta, res$coefficient$beta,res1$coefficient$beta), x = grd, t = "l")
 
 context("Functional Regression - Error messages")
 

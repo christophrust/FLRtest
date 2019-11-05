@@ -29,7 +29,7 @@
 #' \code{summary}.
 #'
 #' @references
-#' Rust, C. (2019) Directed Local Testing in the Functional Linear Model.
+#' Rust, C. (2020) Directed Local Testing in the Functional Linear Model.
 #' Author Manuscript.
 #' 
 #' 
@@ -63,6 +63,10 @@ SeqTest <- function(obj, startval = 0, direction = "right", null){
             stop("Wrongly specified null! Please consult the help file.")
         }
     }
+
+
+    ## start stepM
+    
     
     ## if (missing(type) || type == "F"){
     ##     ## RSS of full model
