@@ -59,7 +59,7 @@ function(grd) {
     p <-length(grd)
     if (any(!(range(grd)!=c(0,1)))) grd <- seq(0,1,len = length(grd)) # transform if grd is not a seq over [0,1]
     order 	<- 4
-    grid.len.2d <- 10* p
+    grid.len.2d <- min( max(1000, 10* p), 10000)
     
     ## Generate the B-spline basis matrix for a natural spline  ns() function of splines package
     ## X_B1 	<- ns( x = grd , knots = grd[2:(p-1)] ,intercept = TRUE)
