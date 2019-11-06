@@ -29,67 +29,80 @@ tStatSequence <- function(obj, null, startval, direction, gridvals = NULL) {
     if (direction != "right") {
         warning("Currently, only direction = 'right' is supported!")
     }
-    
+
+    intercept <- obj$model$intercept
     
     ## compute models with increasing support
-    RSSfull <- sum(obj$residuals^2)
+    ## RSSfull <- sum(obj$residuals^2)
 
     ## obtain p and rho from fitted model
     p <- length(obj$coefficients$beta)
-    rhoEst <- obj$model$rho
-
+    ## rhoEst <- obj$model$rho
+    Nobs <- dim(obj$data$X)[1]
+    df <- obj$model$effDf
+    X <- if (intercept) cbind(1,obj$data$X) else obj$data$X
+    y <- obj$data$y
     
-    AmSeq <- lapply(9:p, function(k){
+    
+    ## precompute basis and matrix a for all splits
+    ## can be optimized
+    AmSeq <- lapply(3:p, function(k){
         natSplBasis( seq(0, 1, length= k))$A_m * k/p
     })
-    
-    p <- dim(obj$data$X)[2]
-    Nobs <- dim(obj$data$X)[1]
-    
-    ## currently hard-coded: startval = 0 and direction = right
-    RSSnullSeq <- vapply(1:p, function(k) {
-        
-        ## if k is less than 5, use simple linear model to obtain rss,
-        ## otherwise the smoothings spline estimator with same rho
-        ## as in original estimation
-        if (k <= 8){
-            
-            ## estimate a simple linear model where regressors are columns 1:k
-            rss <- sum(
-                .lm.fit(
-                    x = if (obj$model$intercept) {
-                            cbind(1,obj$data$X[,1:k, drop = FALSE])
-                        } else {
-                            obj$data$X[,1:k, drop = FALSE]
-                        },
-                    y = obj$data$y
-                )$residuals^2
-            )
 
-            ## return
-            c(rss, k + obj$model$intercept)
-            
+    mdim <- if (intercept) p + 1 else p
+
+    Amats <- vapply(1:p, function(k){
+        Am <- matrix(0, ncol = mdim, nrow = mdim)
+        if (k <3){
+            Am[ (k+1):p + intercept, (k+1):p + intercept] <- AmSeq[[ p-k-2 ]]
+        } else if (k < (p-2)){
+            Am[1:k + intercept, 1:k + intercept] <- AmSeq[[ k-2 ]]
+            Am[(k+1):p + intercept, (k+1):p + intercept] <- AmSeq[[ p-k-2 ]]
         } else {
-
-            ## estimate smoothing spline model
-            selector <- if (obj$model$intercept) c(1:k,p+1) else 1:k
-            npXtX <- obj$model$smspl$npXtX[selector, selector, drop = FALSE]
-            Xsub <- if (obj$model$intercept) cbind(obj$data$X[, 1:k],1) else obj$data$X[, 1:k]
-            A_m <- AmSeq[[ k - 8 ]]
-            
-            rss <- sum(
-            ( 1/k * Xsub %*% (xtx1xt <- 1/Nobs * chol2inv( chol( npXtX + obj$model$rho * A_m))
-                %*% t(Xsub)) %*% obj$data$y -
-                obj$data$y
-            )^2)
-
-            edf <- sum(vapply(1:Nobs, function(i)  sum(Xsub[i,] * xtx1xt[,i]),0))/k
-            c(rss, edf)
+            Am[1:k + intercept, 1:k + intercept] <- AmSeq[[ k-2 ]]
         }
-    },numeric(2))
+        Am
+    }, matrix(0,nrow = mdim, ncol = mdim))
 
-    ## TfSeq <- vapply(RSSnullSeq, function(x){
-    ##     ( (x[1] - RSSfull) / (df1 <- obj$model$effDf + obj$model$intercept - intercept) ) /
-    ##         (RSSfull / (df2 <- Nobs - obj$model$effDf - obj$model$intercept) )
-    ## }, numeric(1))
+    
+    ## function to compute rho from effDf
+    dfGivenRho <- function(x, k) {
+        XtX1Xt <- 1/Nobs * chol2inv( chol( obj$model$smspl$npXtX + exp(x) * Amats[,,k])) %*% t(X)
+        sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
+    }
+    
+
+    ## currently hard-coded: startval = 0 and direction = right
+    tStatSeq <- vapply(1:(p-1), function(k){
+
+        ## obtain rho
+        rho <- exp(
+            uniroot( function(x) {dfGivenRho(x, k = k) - df},lower  = -100, upper = 100, f.lower = p,
+                    extendInt = "downX")$root
+        )
+        
+        ## estimate full model
+        XtX1Xt <- 1/Nobs * chol2inv( chol( obj$model$smspl$npXtX + rho * Amats[,,k])) %*% t(X)
+        effDfFull <- sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
+        RSSfull <- sum( (X %*% XtX1Xt %*% y * 1/p - y)^2)
+        
+        ## estimate null model
+        selector <- if (intercept) 0:k + 1 else 1:k
+        XtX1Xt <- 1/Nobs * chol2inv( chol( obj$model$smspl$npXtX[ selector, selector] +
+                                           rho * Amats[,,k][selector, selector])) %*% t(X[,selector])
+        effDfNull <- sum(vapply(1:Nobs, function(i)  sum(X[i, selector] * XtX1Xt[,i]),0))/p
+        RSSnull <- sum( (X[,selector] %*% XtX1Xt %*% y * 1/p - y)^2 )
+
+        ## compute statistic
+        Stat <- ( (RSSnull - RSSfull) / (effDfFull - effDfNull) ) /
+            (RSSfull /  (Nobs -  effDfFull - intercept))
+        
+        ## result
+        cbind(Stat, effDfFull, effDfNull, rho)
+    }, numeric(4))
+
+    
+    ## return
+    tStatSeq
 }
