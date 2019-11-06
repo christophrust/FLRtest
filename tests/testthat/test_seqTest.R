@@ -9,12 +9,6 @@ beta <- sin(10*grd)
 y <- X %*% beta/p + rnorm(N, sd=0.1)
 obj <- EstFLM(y, X, type = "smoothspline", rho = 0.00000001, intercept = TRUE)
 
-if (0) {
-    devtools::load_all()
-    debug(tStatSequence)
-    aa <- tStatSequence(obj)
-    undebug(tStatSequence)
-}
 
 obj1 <- list()
 class(obj1) <- "abc"
