@@ -21,7 +21,7 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
   
   SEXP res;
   int np = INTEGER(p)[0];
-  res = PROTECT(allocMatrix(REALSXP, np-1, 5));
+  res = PROTECT(allocMatrix(REALSXP, np-1, 6));
 
   int intercpt = INTEGER(intercept)[0];
   int dim = np + intercpt;
@@ -49,11 +49,10 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
   info.p = INTEGER(p);
   info.dim = &dim;
 
-   
-  for (int j=0; j< (np-1); j++){
+  /*
+  for (int j=0; j< 7; j++){
     
     // obtain rho s.t. df in splitted model equal to df in original model (df passed to funciton)
-    //Rprintf("effdf: %f\n", *info.df);
     logrho = R_zeroin2(-200.0, 500.0,
 		       dfgrho(-200, &info),
 		       dfgrho(500, &info), (double (*)(double, void*)) dfgrho ,
@@ -67,25 +66,44 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
       *Maxit = maxiter;
       *Tol = tolerance;
     }
+    Rprintf("logrho = %f\n", logrho);
+    info.Amat += dim * dim;
+  }
 
-    // Rprintf("Rho: %f\n", logrho);
+  error("stop");
+  */
+  
+  for (int j=0; j< (np-1); j++){
     
-    // Rprintf("Amat[10,10], [%i]: %f\n", j, info.Amat[np*9 + 9/2]);
+    // obtain rho s.t. df in splitted model equal to df in original model (df passed to funciton)
+    logrho = R_zeroin2(-200.0, 500.0,
+		       dfgrho(-200, &info),
+		       dfgrho(500, &info), (double (*)(double, void*)) dfgrho ,
+		       (void *) &info,
+		       Tol, Maxit);
+
+    // reset Maxiter and Tol after every iteration
+    if (*Maxit<0){
+      error("Numerical root-finding not successful!");
+    } else {
+      *Maxit = maxiter;
+      *Tol = tolerance;
+    }
     
     // estimate full model
     info.selector = dim;
     fullmodel = estmodel(&info, logrho);
 
-    Rprintf("[%i] df1: %f, df2: %f, lrho: %f\n",j, dfgrho(logrho, &info)+*info.df,fullmodel[0], logrho);
+    // Rprintf("[%i] df1: %f, df2: %f, lrho: %f\n",j, dfgrho(logrho, &info)+*info.df,fullmodel[0], logrho);
     
     REAL(res)[j] = fullmodel[0];
     REAL(res)[j + (np-1)] = fullmodel[1];
     
     // estimate null model
     if (intercpt == 1){
-      info.selector = j+1;
+      info.selector = j+2;
     } else {
-      info.selector = j;
+      info.selector = j+1;
     }
     
     
@@ -96,39 +114,22 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 
     REAL(res)[j +4*(np-1)] = logrho;
 
-    //Rprintf("Rho: %f, effDfFull: %f, effDfNull: %f\n", logrho,
-    //	    REAL(res)[j ],
-    //	    REAL(res)[j +2*(np-1)]);
-    //Rprintf("df-null: %f\n", nullmodel[0]);
-    
-    // store results
-    
-    // increment
+    // compute test statistic: ( (rss0 - rss1)/df1-df0) / (rss1 / (n - df1) 
+    REAL(res)[j +5*(np-1)] =
+      ( (REAL(res)[j +3*(np-1)] - REAL(res)[j +1*(np-1)]) /
+	(REAL(res)[j +0*(np-1)] - REAL(res)[j +2*(np-1)])) /
+      (REAL(res)[j +1*(np-1)] /
+       ( (double) *INTEGER(n) - REAL(res)[j +2*(np-1)]));
+
+
+
     if (j< (np-2)){
       info.Amat += dim * dim;
     }
   }
   
-  //info.Amat = REAL(Amats);
   
   
-  
-  /*
-    edf = dfGivenRho(0, REAL(npXtX), REAL(X),
-    Amat, *INTEGER(n), *INTEGER(p));
-  Rprintf("rho: %f\n", logrho);
-  Rprintf("f(a): %f\n", dfgrho(-100, &info));
-  Rprintf("f(b): %f\n", dfgrho(100, &info));
-  
-  Rprintf("f(rho*): %f\n", dfGivenRho(logrho, (&info)->npXtX, (&info)->X,
-  (&info)->Amat, *(&info)->n, *(&info)->dim, *(&info)->p));
-  */
-
-  
-  /*a = PROTECT(allocVector(REALSXP, 1));
-    REAL(a)[0] = 1.0;
-    SET_VECTOR_ELT(res, 0, a);
-  */
   
   UNPROTECT(1);
   return res;

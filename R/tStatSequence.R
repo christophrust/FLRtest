@@ -75,18 +75,48 @@ tStatSequence <- function(obj, null, startval, direction, gridvals = NULL) {
     }
     
     
-    #vapply(1:5, function(k){
-    #    cat(paste0("[",k,"]:\n"))
-    #    #print(Amats[1:10,10,k])
-    #    print(paste0("logrho=",(lrho <- uniroot( function(x) {dfGivenRho(x, k = k) - df},lower  = -100, upper = 100, f.lower = p-df,
-    #                                            extendInt = "downX")$root)))
-    #    print(paste0("df=", dfGivenRho(lrho,k)-df))
-    #    print(paste0("df(-200)=", dfGivenRho(-200,k)-df))
-    #    print(paste0("df(500)=", dfGivenRho(500,k)-df))
-    #    0
-    #},0)
+    ## vapply(1:5, function(k){
+    ##     cat(paste0("[",k,"]:\n"))
+    ##     #print(Amats[1:10,10,k])
+    ##     print(paste0("logrho=",(lrho <- uniroot( function(x) {dfGivenRho(x, k = k) - (df+1)},lower  = -200, upper = 500, f.lower = (p-df+1),
+    ##                                             extendInt = "downX")$root)))
+        
+    ##     print(paste0("df=", dfGivenRho(lrho,k)-df-1))
+    ##     print(paste0("df1=", .Call("R_dfGivenRho",
+    ##                               rho = lrho,
+    ##                               npXtX = obj$model$smspl$npXtX,
+    ##                               X = X,
+    ##                               Amat = Amats[,,k],
+    ##                               Nobs = as.integer(nrow(X)),
+    ##                               dim = as.integer(ncol(X)),
+    ##                               p = as.integer(p),
+    ##                               PACKAGE = "FLRtest") -df -1))
+        
+    ##     print(paste0("df(-200)=", dfGivenRho(-200,k)-df-1))
+    ##     print(paste0("df1(-200)=", .Call("R_dfGivenRho",
+    ##                               rho = -200,
+    ##                               npXtX = obj$model$smspl$npXtX,
+    ##                               X = X,
+    ##                               Amat = Amats[,,k],
+    ##                               Nobs = as.integer(nrow(X)),
+    ##                               dim = as.integer(ncol(X)),
+    ##                               p = as.integer(p),
+    ##                               PACKAGE = "FLRtest") -df -1))
+    ##     print(paste0("df(500)=", dfGivenRho(500,k)-df-1))
+    ##     print(paste0("df1(500)=", .Call("R_dfGivenRho",
+    ##                               rho = 500,
+    ##                               npXtX = obj$model$smspl$npXtX,
+    ##                               X = X,
+    ##                               Amat = Amats[,,k],
+    ##                               Nobs = as.integer(nrow(X)),
+    ##                               dim = as.integer(ncol(X)),
+    ##                               p = as.integer(p),
+    ##                               PACKAGE = "FLRtest") -df -1))
+        
+    ##     0
+    ## },0)
     
-    #stop("stop")
+    ## stop("stop")
 
     ## currently hard-coded: startval = 0 and direction = right
     tStatSeq <- vapply(1:(p-1), function(k){
@@ -96,7 +126,7 @@ tStatSequence <- function(obj, null, startval, direction, gridvals = NULL) {
         
         ## obtain rho
         rho <- exp(
-            uniroot( function(x) {dfGivenRho(x, k = k) - (df+1)},lower  = -100, upper = 100, f.lower = p-df,
+            uniroot( function(x) {dfGivenRho(x, k = k) - (df+1)},lower  = -200, upper = 500, f.lower = p-df,
                     extendInt = "downX")$root
         )
         #print(rho)
