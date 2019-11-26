@@ -1,3 +1,5 @@
+#' @useDynLib FLRtest
+
 tStatSequence <- function(obj, null, startval, direction, gridvals = NULL) {
 
     ## check that obj is of class flm
@@ -64,23 +66,41 @@ tStatSequence <- function(obj, null, startval, direction, gridvals = NULL) {
         }
         Am
     }, matrix(0,nrow = mdim, ncol = mdim))
-
+    
     
     ## function to compute rho from effDf
     dfGivenRho <- function(x, k) {
-        XtX1Xt <- 1/Nobs * chol2inv( chol( obj$model$smspl$npXtX + exp(x) * Amats[,,k])) %*% t(X)
-        sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
+        XtX1Xt <- 1/(Nobs*p) * chol2inv( chol( obj$model$smspl$npXtX + exp(x) * Amats[,,k])) %*% t(X)
+        sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))
     }
     
+    
+    #vapply(1:5, function(k){
+    #    cat(paste0("[",k,"]:\n"))
+    #    #print(Amats[1:10,10,k])
+    #    print(paste0("logrho=",(lrho <- uniroot( function(x) {dfGivenRho(x, k = k) - df},lower  = -100, upper = 100, f.lower = p-df,
+    #                                            extendInt = "downX")$root)))
+    #    print(paste0("df=", dfGivenRho(lrho,k)-df))
+    #    print(paste0("df(-200)=", dfGivenRho(-200,k)-df))
+    #    print(paste0("df(500)=", dfGivenRho(500,k)-df))
+    #    0
+    #},0)
+    
+    #stop("stop")
 
     ## currently hard-coded: startval = 0 and direction = right
     tStatSeq <- vapply(1:(p-1), function(k){
 
+
+        ##print(c(dfGivenRho(-100,k), dfGivenRho(100,k)) - df)
+        
         ## obtain rho
         rho <- exp(
-            uniroot( function(x) {dfGivenRho(x, k = k) - df},lower  = -100, upper = 100, f.lower = p,
+            uniroot( function(x) {dfGivenRho(x, k = k) - (df+1)},lower  = -100, upper = 100, f.lower = p-df,
                     extendInt = "downX")$root
         )
+        #print(rho)
+        #print(Amats[10,10,k])
         
         ## estimate full model
         XtX1Xt <- 1/Nobs * chol2inv( chol( obj$model$smspl$npXtX + rho * Amats[,,k])) %*% t(X)
@@ -94,13 +114,15 @@ tStatSequence <- function(obj, null, startval, direction, gridvals = NULL) {
         effDfNull <- sum(vapply(1:Nobs, function(i)  sum(X[i, selector] * XtX1Xt[,i]),0))/p
         RSSnull <- sum( (X[,selector] %*% XtX1Xt %*% y * 1/p - y)^2 )
 
+        #print(paste0("Rho: ", log(rho), "effDfFull: ",effDfFull, ". effDfNull: ", effDfNull))
+
         ## compute statistic
         Stat <- ( (RSSnull - RSSfull) / (effDfFull - effDfNull) ) /
             (RSSfull /  (Nobs -  effDfFull - intercept))
         
         ## result
-        cbind(Stat, effDfFull, effDfNull, rho)
-    }, numeric(4))
+        c(stat = Stat, df.full = effDfFull, rss.full = RSSfull, df.null = effDfNull, rss.null = RSSnull, lrho = log(rho))
+    }, numeric(6))
 
     
     ## return

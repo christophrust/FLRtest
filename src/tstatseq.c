@@ -11,7 +11,7 @@ static double dfgrho(double x, struct callinfo *info){
   double res;
   res = dfGivenRho(x, info->npXtX, info->X,
 		   info->Amat, *info->n, *info->dim, *info->p);
-  res -= *info->df;
+  res -= (*info->df + 1);
   return res;
 }
 
