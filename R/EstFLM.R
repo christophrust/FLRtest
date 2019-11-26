@@ -130,7 +130,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         yHat <- (if (intercept) cbind(1,scores) else scores) %*% xi
 
         ## recover curve
-        beta <- efuncs %*% (if(intercept) xi[-1] else xi)
+        beta <- c( if(intercept) xi[1] else NULL, efuncs %*% (if(intercept) xi[-1] else xi))
 
         effDf <- ncol(efuncs)
         
@@ -142,8 +142,8 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
     ## return stuff
     obj <- list(
         coefficients =
-            list(beta = beta[1:p],
-                 intercept = if(intercept) beta[p + 1] else NULL),
+            list(beta = if (intercept) beta[-1] else beta,
+                 intercept = if(intercept) beta[1] else NULL),
         residuals = y - yHat,
         fitted = yHat,
         model = list(intercept = intercept,
