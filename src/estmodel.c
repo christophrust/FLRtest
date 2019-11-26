@@ -8,19 +8,21 @@ double * estmodel(struct callinfo *model, double logrho){
   
 
   static double res[2];
-  double * npXtXplusA, *npXtXplusA1Xt;
+  double * npXtXplusA, *npXtXplusA1Xt, *npXtXy;
   int i, j, ll, ur, cnt, add, info;
-  int dim = *model->p;
+  int dim = *model->p; // later to be changed to dim
   int selector = model->selector;
   int n= *model->n;
+  int p = *model->p;   // p shall be dim -1 if intercept is included in model
   double exprho = exp(logrho);
-  double edf = 0;
+  double edf = 0, rss=0, yi = 0;
   
   double alpha = 1/ ((double) *model->n);
   double beta = 0;
     
   npXtXplusA = (double *) malloc( ( selector * selector) * sizeof(double));
   npXtXplusA1Xt = (double *) malloc( (selector * (*model->n)) * sizeof(double));
+  npXtXy = (double *) malloc( selector * sizeof(double));
 
   if (selector > dim){
 
@@ -79,9 +81,13 @@ double * estmodel(struct callinfo *model, double logrho){
     F77_CALL(dgemm)("n","t",&selector, &n, &selector, &alpha, npXtXplusA, &selector,
 		    model->X, &n, &beta, npXtXplusA1Xt, &selector); 
 
-  
+    //for (i=0; i<10; i++){
+    //  Rprintf("npXtXplusA1Xt[%i]: %f\n", i, npXtXplusA1Xt[i]);
+    //}
   }
-  
+  //for (i=0; i<10; i++){
+  //  Rprintf("y[%i]: %f\n", i, model->y[i]);
+  //  }
 
   
   // compute trace of X * npXtXplusA1Xt
@@ -92,9 +98,27 @@ double * estmodel(struct callinfo *model, double logrho){
   }
 
   /* compute RSS of model */
+  // 1. XtX %*% y
+  for (i = 0; i < selector; i++){
+    npXtXy[i] = 0;
+    for (j=0; j < n; j++){
+      npXtXy[i] +=( npXtXplusA1Xt[selector * j + i] * ( model->y[j] ));
+    }
+    
+  }
+ 
+  // 2. aggregate (X %*% XtX %*%y /p - y)^2
+  for (i = 0; i<n; i++){
+    yi = 0;
+    for (j = 0; j<selector; j++){
+      yi += model->X[ j * n + i ] * npXtXy[j];
+    }
+    rss += pow( yi/ ((double) p) - model->y[i], 2);
+  }
   
   // sum( (X[,selector] %*% XtX1Xt %*% y * 1/p - y)^2 )
-  res[0] = edf / ((double) dim);
+  res[1] = rss;
+  res[0] = edf / ((double) p);
   return res;
 }
 
@@ -103,7 +127,7 @@ double * estmodel(struct callinfo *model, double logrho){
 
 /* R wrapper for above function */
 
-SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP selector, SEXP logrho){
+SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP selector, SEXP logrho){
 
   SEXP res = PROTECT(allocVector(REALSXP, 2));
   double * result;
@@ -112,6 +136,7 @@ SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP sel
 
   model.npXtX = REAL(npXtX);
   model.X = REAL(X);
+  model.y = REAL(y);
   model.Amat = REAL(Amat);
   model.df = REAL(df);
   model.n = INTEGER(n);
