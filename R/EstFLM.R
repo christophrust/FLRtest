@@ -53,8 +53,8 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
 
         
         if (intercept){
-            X <- cbind(X,1)
-            splMat$A_m <- rbind( cbind(splMat$A_m,0),0)
+            X <- cbind(1,X)
+            splMat$A_m <- rbind( 0, cbind(0, splMat$A_m))
         }
         
         
