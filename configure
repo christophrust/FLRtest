@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# configure script for Rmailer, code based Autoconf script of R-package 'curl' by Jeroen Ooms
+
+PKG_LAPACKLIBS=`${R_HOME}/bin/R CMD config LAPACK_LIBS`
+PKG_BLASLIBS=`${R_HOME}/bin/R CMD config BLAS_LIBS`
+PKG_FLIBS=`${R_HOME}/bin/R CMD config FLIBS`
+
+PKG_LIBS="$PKG_LAPACKLIBS $PKG_BLASLIBS $PKG_FLIBS"
+
+echo $PKG_LIBS
+
+# write Makevars file
+echo "PKG_LIBS = ${PKG_LIBS}" > src/Makevars
+
