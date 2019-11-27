@@ -32,7 +32,7 @@
 #' 
 #' @author Christoph Rust
 #'
-#' @seealso EstFLM
+#' @seealso EstFLM, GlobalTest
 #' @export
 GlobalTest <- function(obj, null, type="F", intercept = TRUE){
 
