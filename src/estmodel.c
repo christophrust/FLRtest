@@ -20,9 +20,9 @@ double * estmodel(struct callinfo *model, double logrho){
   double alpha = 1/ ((double) *model->n);
   double beta = 0;
     
-  npXtXplusA = (double *) malloc( ( selector * selector) * sizeof(double));
-  npXtXplusA1Xt = (double *) malloc( (selector * (*model->n)) * sizeof(double));
-  npXtXy = (double *) malloc( selector * sizeof(double));
+  npXtXplusA = (double *) Calloc( ( selector * selector), double);
+  npXtXplusA1Xt = (double *) Calloc( (selector * (*model->n)), double);
+  npXtXy = (double *) Calloc( selector, double);
 
   if (selector > dim){
 
@@ -115,6 +115,11 @@ double * estmodel(struct callinfo *model, double logrho){
     }
     rss += pow( yi/ ((double) p) - model->y[i], 2);
   }
+
+  // Free memory
+  Free(npXtXplusA1Xt);
+  Free(npXtXplusA);
+  Free(npXtXy);
   
   // sum( (X[,selector] %*% XtX1Xt %*% y * 1/p - y)^2 )
   res[1] = rss;

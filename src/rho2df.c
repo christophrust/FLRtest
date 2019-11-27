@@ -27,8 +27,8 @@ double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, in
   
   // initialize arrays
   double *npXtXplusA, *npXtXplusA1Xt;
-  npXtXplusA = (double *) malloc(pow(dim,2) * sizeof(double));
-  npXtXplusA1Xt = (double *) malloc( dim*Nobs  * sizeof(double));;
+  npXtXplusA = (double *) Calloc(pow(dim,2), double);
+  npXtXplusA1Xt = (double *) Calloc( dim*Nobs, double);
   
   
   // sum of npXtX + rho * A
@@ -72,7 +72,10 @@ double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, in
       res += X[j*Nobs + i] * npXtXplusA1Xt[i * dim + j];
     }
   }
-  
+
+  Free(npXtXplusA1Xt);
+  Free(npXtXplusA);
+    
   res = res/ ((double) p);
   
   return res;

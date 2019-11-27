@@ -152,10 +152,3 @@ void R_init_FLRtest(DllInfo *dll) {
     R_useDynamicSymbols(dll, FALSE);
 }
 
-
-
-/*
-TODO: test dfGivenRho
-
-implement loop over different splits
-*/
