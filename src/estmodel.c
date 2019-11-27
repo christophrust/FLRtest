@@ -10,7 +10,7 @@ double * estmodel(struct callinfo *model, double logrho){
   static double res[2];
   double * npXtXplusA, *npXtXplusA1Xt, *npXtXy;
   int i, j, ll, ur, cnt, add, info;
-  int dim = *model->p; // later to be changed to dim
+  int dim = *model->dim; // later to be changed to dim
   int selector = model->selector;
   int n= *model->n;
   int p = *model->p;   // p shall be dim -1 if intercept is included in model
@@ -28,7 +28,7 @@ double * estmodel(struct callinfo *model, double logrho){
 
     error("selector can be at max as large as dim!");
 
-  } else if (selector >= dim){
+  } else if (selector == dim){
 
     for (i=0; i< (dim * dim); i++){
       npXtXplusA[i] = model->npXtX[i] + exprho * model->Amat[i];
@@ -127,7 +127,7 @@ double * estmodel(struct callinfo *model, double logrho){
 
 /* R wrapper for above function */
 
-SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP selector, SEXP logrho){
+SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho){
 
   SEXP res = PROTECT(allocVector(REALSXP, 2));
   double * result;
@@ -141,6 +141,7 @@ SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SEXP p, 
   model.df = REAL(df);
   model.n = INTEGER(n);
   model.p = INTEGER(p);
+  model.dim = INTEGER(dim);
   model.selector = *INTEGER(selector);
     
   result = estmodel(&model, *REAL(logrho));

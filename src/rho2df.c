@@ -13,7 +13,7 @@ Function to compute effective degrees of freedom of the smspl
 fit given a smoothing paramter rho 
 
 */
-double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, int dim){
+double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, int dim, int p){
   
   
   
@@ -73,7 +73,7 @@ double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, in
     }
   }
   
-  res *= (double) 1/dim;
+  res = res/ ((double) p);
   
   return res;
 }
@@ -81,7 +81,7 @@ double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, in
 
 
 /* R wrapper around the above function */
-SEXP R_dfGivenRho(SEXP rho, SEXP npXtX, SEXP X, SEXP Amat, SEXP Nobs, SEXP dim){
+SEXP R_dfGivenRho(SEXP rho, SEXP npXtX, SEXP X, SEXP Amat, SEXP Nobs, SEXP dim, SEXP p){
 
   SEXP res = PROTECT(allocVector(REALSXP, 1));
 
@@ -89,11 +89,12 @@ SEXP R_dfGivenRho(SEXP rho, SEXP npXtX, SEXP X, SEXP Amat, SEXP Nobs, SEXP dim){
   
   
   REAL(res)[0] = dfGivenRho(REAL(rho)[0],
-		      REAL(npXtX),
-		      REAL(X),
-		      REAL(Amat),
-		      *INTEGER(Nobs),
-		      *INTEGER(dim));
+			    REAL(npXtX),
+			    REAL(X),
+			    REAL(Amat),
+			    *INTEGER(Nobs),
+			    *INTEGER(dim),
+			    *INTEGER(p));
   
   //REAL(res)[0] = df;
   UNPROTECT(1);

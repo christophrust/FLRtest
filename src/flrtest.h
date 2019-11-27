@@ -9,11 +9,13 @@
 struct callinfo {
   double *npXtX; // pointer to matrix 1/(Np) X'X
   double *X;     // pointer to matrix X
+  double *y;     // pointer to vector y
   double *Amat;  // pointer to matrix Amat
   double *df;    // pointer to df of full model
   int *n;        // pointer to number of obs
   int *p;        // pointer to dimension of full model (p+1) if intercept is included
-  int selector;  // mutable selector (selection subset of model)
+  int *dim;      // pointer to dimension of the model (number of colums of X/ npXtX, Amat)
+  int selector;  // mutable selector (selecting subset of model)
 };
 
 
@@ -29,16 +31,17 @@ double R_zeroin2(			/* An estimate of the root */
     int *Maxit);
 
 
-double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, int dim);
+double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, int dim, int p);
 
 
 
-SEXP R_dfGivenRho(SEXP rho, SEXP npXtX, SEXP X, SEXP Amat, SEXP Nobs, SEXP dim);
+SEXP R_dfGivenRho(SEXP rho, SEXP npXtX, SEXP X, SEXP Amat, SEXP Nobs, SEXP dim, SEXP p);
 
 
 double * estmodel(struct callinfo *model, double rho);
 
-SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP selector, SEXP logrho);
+SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df,
+		SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho);
 
 // SEXP matmult(SEXP a, SEXP b);
 
