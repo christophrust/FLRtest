@@ -111,5 +111,6 @@ GlobalTest <- function(obj, null, type="F", intercept = TRUE){
                 type = if (missing(type)) "F" else type,
                 null = beta0)
     class(obj) <- "flm.test"
+    attr(obj, which = "test.type") <- "global"
     obj
 }

@@ -11,7 +11,11 @@
 #' alternatively, as an expansion of a given basis system. Defaults to
 #' the zero function.
 #'
-#' @param ... Further arguments passed to underlying C-routine. See source code.
+#' @param conf.level Confidence level (1 - significance level) used to decide
+#' whether to reject or not.
+#'
+#' @param ... Further arguments passed to underlying C-routine. See source code of
+#' \code{testseq}.
 #'
 #' @details
 #' \code{dirTest} performs the directed local test in the functional linear
@@ -30,9 +34,20 @@
 #'
 #' @seealso EstFLM, GlobalTest
 #' @export
-dirTest <- function(obj, null, ...){
+dirTest <- function(obj, null, conf.level = 0.95, ...){
 
+    ## compute sequence of test statistics
     tseq <- testseq(obj, null,...)
+
+    ## find rejections
+    rej <- tseq[,"pval"] < (1 - conf.level)
+
+    ## return obj
+    obj <- list(rejections = rej, test.sequence = tseq, conf.level = conf.level)
     
+    class(obj) <- "flm.test"
+    attr(obj, which = "test.type") <- "directed"
+    
+    obj
 }
 
