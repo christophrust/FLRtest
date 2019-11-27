@@ -224,7 +224,7 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
         
         ## obtain rho
         rho <- exp(
-            uniroot( function(x) {dfGivenRho(x, k = k) - (df+1)},lower  = -200, upper = 500, f.lower = p-df,
+            uniroot( function(x) {dfGivenRho(x, k = k) - (df+3)},lower  = -200, upper = 500, f.lower = p-df,
                     extendInt = "downX")$root
         )
         #print(rho)
