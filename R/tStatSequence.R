@@ -15,7 +15,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
 
     if (missing(direction))
         direction <- "right"
-    
+
     if (!(direction %in% c("right","left","both"))) {
         stop("direction must be either of 'right', 'left' or 'both'!") 
     }
@@ -34,7 +34,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
     }
 
     intercept <- obj$model$intercept
-    
+
     ## compute models with increasing support
     ## RSSfull <- sum(obj$residuals^2)
 
@@ -45,8 +45,8 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
     df <- obj$model$effDf
     X <- if (intercept) cbind(1,obj$data$X) else obj$data$X
     y <- obj$data$y
-    
-    
+
+
     ## precompute basis and matrix a for all splits
     ## can be optimized
     AmSeq <- lapply(3:p, function(k){
@@ -67,8 +67,8 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
         }
         Am
     }, matrix(0,nrow = mdim, ncol = mdim))
-    
-    
+
+
     ## compute sequence of test statistic
     tSeq <- .Call("tstatseq",
                   y=y,
@@ -83,7 +83,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
                   intercept = as.integer(intercept),
                   PACKAGE = "FLRtest")
 
-    
+
 
     colnames(tSeq) <- c("edfFull", "rssFull", "edfNull", "rssNull", "logrho", "statistic")
 
@@ -91,7 +91,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
     ## add column p-Value
     tSeq <- cbind(tSeq, pval = pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
                    df2 = Nobs - tSeq[,"edfFull"], lower.tail = FALSE))
-    
+
     ## return
     tSeq
 }
@@ -131,7 +131,7 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
     }
 
     intercept <- obj$model$intercept
-    
+
     ## compute models with increasing support
     ## RSSfull <- sum(obj$residuals^2)
 
@@ -142,8 +142,8 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
     df <- obj$model$effDf
     X <- if (intercept) cbind(1,obj$data$X) else obj$data$X
     y <- obj$data$y
-    
-    
+
+
     ## precompute basis and matrix a for all splits
     ## can be optimized
     AmSeq <- lapply(3:p, function(k){
@@ -164,21 +164,21 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
         }
         Am
     }, matrix(0,nrow = mdim, ncol = mdim))
-    
-    
+
+
     ## function to compute rho from effDf
     dfGivenRho <- function(x, k) {
         XtX1Xt <- 1/(Nobs*p) * chol2inv( chol( obj$model$smspl$npXtX + exp(x) * Amats[,,k])) %*% t(X)
         sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))
     }
-    
-    
+
+
     ## vapply(1:5, function(k){
     ##     cat(paste0("[",k,"]:\n"))
     ##     #print(Amats[1:10,10,k])
     ##     print(paste0("logrho=",(lrho <- uniroot( function(x) {dfGivenRho(x, k = k) - (df+1)},lower  = -200, upper = 500, f.lower = (p-df+1),
     ##                                             extendInt = "downX")$root)))
-        
+
     ##     print(paste0("df=", dfGivenRho(lrho,k)-df-1))
     ##     print(paste0("df1=", .Call("R_dfGivenRho",
     ##                               rho = lrho,
@@ -189,7 +189,7 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
     ##                               dim = as.integer(ncol(X)),
     ##                               p = as.integer(p),
     ##                               PACKAGE = "FLRtest") -df -1))
-        
+
     ##     print(paste0("df(-200)=", dfGivenRho(-200,k)-df-1))
     ##     print(paste0("df1(-200)=", .Call("R_dfGivenRho",
     ##                               rho = -200,
@@ -210,10 +210,10 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
     ##                               dim = as.integer(ncol(X)),
     ##                               p = as.integer(p),
     ##                               PACKAGE = "FLRtest") -df -1))
-        
+
     ##     0
     ## },0)
-    
+
     ## stop("stop")
 
     ## currently hard-coded: startval = 0 and direction = right
@@ -221,20 +221,19 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
 
 
         ##print(c(dfGivenRho(-100,k), dfGivenRho(100,k)) - df)
-        
+
         ## obtain rho
         rho <- exp(
-            uniroot( function(x) {dfGivenRho(x, k = k) - (df+3)},lower  = -200, upper = 500, f.lower = p-df,
-                    extendInt = "downX")$root
+            uniroot( function(x) {dfGivenRho(x, k = k) - (df+3)},lower  = -200, upper = 500,
+                    f.lower = p-df, extendInt = "downX")$root
         )
         #print(rho)
         #print(Amats[10,10,k])
-        
         ## estimate full model
         XtX1Xt <- 1/Nobs * chol2inv( chol( obj$model$smspl$npXtX + rho * Amats[,,k])) %*% t(X)
         effDfFull <- sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
         RSSfull <- sum( (X %*% XtX1Xt %*% y * 1/p - y)^2)
-        
+
         ## estimate null model
         selector <- if (intercept) 0:k + 1 else 1:k
         XtX1Xt <- 1/Nobs * chol2inv( chol( obj$model$smspl$npXtX[ selector, selector] +
@@ -247,12 +246,12 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
         ## compute statistic
         Stat <- ( (RSSnull - RSSfull) / (effDfFull - effDfNull) ) /
             (RSSfull /  (Nobs -  effDfFull - intercept))
-        
+
         ## result
         c(stat = Stat, df.full = effDfFull, rss.full = RSSfull, df.null = effDfNull, rss.null = RSSnull, lrho = log(rho))
     }, numeric(6))
 
-    
+
     ## return
     tStatSeq
 }
