@@ -18,14 +18,14 @@ static double dfgrho(double x, struct callinfo *info){
 
 SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 	      SEXP npXtX, SEXP tol, SEXP maxit,SEXP intercept){
-  
+
   SEXP res;
   int np = INTEGER(p)[0];
   res = PROTECT(allocMatrix(REALSXP, np-1, 6));
 
   int intercpt = INTEGER(intercept)[0];
   int dim = np + intercpt;
-  
+
   double logrho;
   //double *Amat = REAL(Amats);
   double *fullmodel, *nullmodel;
@@ -34,12 +34,12 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
   const int maxiter = *INTEGER(maxit);
   int Maxiter = maxiter;
   double Tolerance = tolerance;
-  
+
   double *Tol = &Tolerance;
   int *Maxit = &Maxiter;
-  
+
   struct callinfo info;
-  
+
   info.npXtX = REAL(npXtX);
   info.X = REAL(X);
   info.y = REAL(y);
@@ -51,7 +51,7 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 
   /*
   for (int j=0; j< 7; j++){
-    
+
     // obtain rho s.t. df in splitted model equal to df in original model (df passed to funciton)
     logrho = R_zeroin2(-200.0, 500.0,
 		       dfgrho(-200, &info),
@@ -72,9 +72,9 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 
   error("stop");
   */
-  
+
   for (int j=0; j< (np-1); j++){
-    
+
     // obtain rho s.t. df in splitted model equal to df in original model (df passed to funciton)
     logrho = R_zeroin2(-200.0, 500.0,
 		       dfgrho(-200, &info),
@@ -89,25 +89,25 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
       *Maxit = maxiter;
       *Tol = tolerance;
     }
-    
+
     // estimate full model
     info.selector = dim;
-    fullmodel = estmodel(&info, logrho);
+    fullmodel = estmodel(&info, logrho,0);
 
     // Rprintf("[%i] df1: %f, df2: %f, lrho: %f\n",j, dfgrho(logrho, &info)+*info.df,fullmodel[0], logrho);
-    
+
     REAL(res)[j] = fullmodel[0];
     REAL(res)[j + (np-1)] = fullmodel[1];
-    
+
     // estimate null model
     if (intercpt == 1){
       info.selector = j+2;
     } else {
       info.selector = j+1;
     }
-    
-    
-    nullmodel = estmodel(&info, logrho);
+
+
+    nullmodel = estmodel(&info, logrho,0);
 
     REAL(res)[j +2*(np-1)] = nullmodel[0];
     REAL(res)[j +3*(np-1)] = nullmodel[1];
@@ -127,10 +127,9 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
       info.Amat += dim * dim;
     }
   }
-  
-  
-  
-  
+
+
+
   UNPROTECT(1);
   return res;
 }
@@ -141,7 +140,7 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 static const R_CallMethodDef CallEntries[] = {
     {"tstatseq", (DL_FUNC) &tstatseq, 10},
     {"R_dfGivenRho", (DL_FUNC) &R_dfGivenRho, 7},
-    {"R_estmodel", (DL_FUNC) &R_estmodel, 10},
+    {"R_estmodel", (DL_FUNC) &R_estmodel, 11},
     {NULL, NULL, 0}
 };
 

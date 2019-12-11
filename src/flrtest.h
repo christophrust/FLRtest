@@ -38,10 +38,10 @@ double dfGivenRho(double x, double *npXtX, double *X, double *Amat, int Nobs, in
 SEXP R_dfGivenRho(SEXP rho, SEXP npXtX, SEXP X, SEXP Amat, SEXP Nobs, SEXP dim, SEXP p);
 
 
-double * estmodel(struct callinfo *model, double rho);
+double * estmodel(struct callinfo *model, double rho, int retbeta);
 
 SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df,
-		SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho);
+                SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho, SEXP retbeta);
 
 // SEXP matmult(SEXP a, SEXP b);
 
