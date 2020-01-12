@@ -1,11 +1,11 @@
 #' Directed Test
-#' 
+#'
 #' Test versus global alternative in Functional Linear Regression
 #'
-#' 
+#'
 #' @param obj A fitted model object of class "flm", as returned by
 #' \code{EstFLM}
-#' 
+#'
 #' @param null An optional global function to test against. The null
 #' can be specified as a vector holding the discretized function object or,
 #' alternatively, as an expansion of a given basis system. Defaults to
