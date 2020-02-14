@@ -51,24 +51,24 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         ## basis and Amat
         splMat <- natSplBasis(grd)
 
-        
+
         if (intercept){
             X <- cbind(1,X)
             splMat$A_m <- rbind( 0, cbind(0, splMat$A_m))
         }
-        
-        
+
+
         if (!is.null(rho)) {
-            
+
             NPXtX <- crossprod(X) * 1/(Nobs * p)
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
-            
+
             ## solution for all parameters
             beta <- XtX1Xt %*% y
-            
+
             ## number of effective degrees of freedom
             effDf <- sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
-            
+
             yHat <- X %*% beta * 1/p
         } else if (!is.null(df)){
 
@@ -82,34 +82,34 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
 
             rho <- exp(uniroot( function(x) {dfGivenRho(x) - df},lower  = -100, upper = 100, f.lower = p,
                                extendInt = "downX")$root)
-            
+
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)
-            
+
             ## solution for all parameters
             beta <- XtX1Xt %*% y
-            
+
             ## number of effective degrees of freedom
             effDf <- sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
-            
+
             yHat <- X %*% beta * 1/p
-            
+
         } else {
             ## use GCV to find optimal rho
             ## ... tbd
         }
-        
-        
+
+
     } else if (type == "fpc"){
 
         ## spectral decomposition
         Cov <- cov(X)
         eigendec <- eigen(Cov)
-        
+
         if (!is.null(df)){
             ## scale by sqrt(p) to be of length 1 in L^2 norm
             efuncs <- eigendec$vectors[,1:df, drop = FALSE] * sqrt(p)
             K <- df
-            
+
         } else if (!is.null(cpv)){
             cumvals <- vapply(1:length(eigendec$values),
                               function(k) sum(eigendec$values[1:k])/sum(eigendec$values),0)
@@ -133,8 +133,8 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         beta <- c( if(intercept) xi[1] else NULL, efuncs %*% (if(intercept) xi[-1] else xi))
 
         effDf <- ncol(efuncs)
-        
-        
+
+
     } else{
         stop(sprintf("type '%s' not a valid estimation specification!", model$type))
     }
@@ -159,7 +159,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
                      ),
         data = list(y=y, X=if (intercept) X[,-1, drop = FALSE] else X)
     )
-    
+
     class(obj) <- "flm"
     obj
 }

@@ -112,7 +112,7 @@ tStatSequenceR <- function(obj, null, startval, direction, gridvals = NULL) {
 
     if (missing(direction))
         direction <- "right"
-    
+
     if (!(direction %in% c("right","left","both"))) {
         stop("direction must be either of 'right', 'left' or 'both'!") 
     }

@@ -1,17 +1,17 @@
 #' SeqTest
-#' 
+#'
 #' Sequential test in the functional linear model
 #'
-#' 
+#'
 #' @param obj A fitted model object of class "flm", as returned by
 #' \code{EstFLM}
-#' 
+#'
 #' @param startval A value in the domain \eqn{[0,1]} where it is
 #' assumed that the effect is strongest. Defaults to 0.
 #'
 #' @param direction Either of \code{"right","left","both"}, specifying
 #' into which direction to test starting from \code{startvalue}.
-#' Defaults to \code{"right"}. 
+#' Defaults to \code{"right"}.
 #'
 #' @param null An optional global function to test against. The null
 #' can be specified as a vector holding the discretized function object or,
@@ -31,8 +31,8 @@
 #' @references
 #' Rust, C. (2020) Directed Local Testing in the Functional Linear Model.
 #' Author Manuscript.
-#' 
-#' 
+#'
+#'
 #' @author Christoph Rust
 #'
 #' @seealso EstFLM, GlobalTest
@@ -42,7 +42,7 @@ SeqTest <- function(obj, startval = 0, direction = "right", null){
     if (!identical(class(obj), "flm")){
         stop("obj must be of class flm!")
     }
-    
+
     p <- length(obj$coefficients$beta)
     Nobs <- length(obj$fitted)
 
@@ -51,14 +51,14 @@ SeqTest <- function(obj, startval = 0, direction = "right", null){
         if (is.numeric(null) && (length(null) != p)){
 
             stop(gettext("Wrongly specified null!\nIf specified as numeric vector, it needs to be of same length as the number of discretization points used in '%s': %i", obj, p))
-            
+
         } else if (is.list(null) &&
                    (!all(names(null) %in% c("basis","coefs")) ||
                     (dim(null$basis)[1] != p ||
                      dim(null$basis)[2] != length(null$coefs)))){
 
             stop("Wrongly specified null!\nIf specified as basis expansion 'null' must contain both a basis (matric of dimension p times k) and coefs (vector of length k)!")
-            
+
         } else if (!is.list(null) && !is.numeric(null)){
             stop("Wrongly specified null! Please consult the help file.")
         }
@@ -66,12 +66,12 @@ SeqTest <- function(obj, startval = 0, direction = "right", null){
 
 
     ## start stepM
-    
-    
+
+
     ## if (missing(type) || type == "F"){
     ##     ## RSS of full model
     ##     RSSfull <- sum(obj$residuals^2)
-        
+
     ##     ## RSS of null model
     ##     beta0 <- if (missing(null)){
     ##                  NULL
@@ -80,14 +80,14 @@ SeqTest <- function(obj, startval = 0, direction = "right", null){
     ##              } else {
     ##                  null$basis %*% null$coefs
     ##              }
-        
+
     ##     RSSnull <- if (missing(null)){
     ##                    sum( (obj$data$y - if(intercept) mean(obj$data$y) else 0)^2)
     ##                } else {
     ##                    sum( (obj$data$y -  obj$data$X[,1:p, drop=FALSE] %*% beta0/p -
     ##                          if(intercept) mean(obj$data$y) else 0)^2)
     ##                }
-        
+
 
     ##     ## Test statistic
     ##     Tf <- ( (RSSnull - RSSfull) / (df1 <- obj$model$effDf + obj$model$intercept - intercept) ) /
@@ -106,8 +106,8 @@ SeqTest <- function(obj, startval = 0, direction = "right", null){
     ## } else {
     ##     stop("Currently only the F-test is supported!")
     ## }
-    
-    
+
+
     ## collect return
     obj <- list(statistic = Tf,
                 df = c(df1,df2),

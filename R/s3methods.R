@@ -17,7 +17,7 @@ print.flm.test <- function(x,...){
     } else  if (attr(x, which = "test.type") == "directed"){
 
         pm <- max(which(x$rej))
-        
+
         cat("Directed test of association in the functional linear model\n")
         cat("-----------------------------------------------------------\n")
         cat(sprintf(

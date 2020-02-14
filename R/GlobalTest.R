@@ -1,11 +1,11 @@
 #' GlobalTest
-#' 
+#'
 #' Test versus global alternative in Functional Linear Regression
 #'
-#' 
+#'
 #' @param obj A fitted model object of class "flm", as returned by
 #' \code{EstFLM}
-#' 
+#'
 #' @param null An optional global function to test against. The null
 #' can be specified as a vector holding the discretized function object or,
 #' alternatively, as an expansion of a given basis system. Defaults to
@@ -29,7 +29,7 @@
 #' Kong, D., Staicu, A., Maity, A. (2016) Classical Testing in Functional
 #' Linear Models. Journal of Nonparametric Statistics, \emph{28}(4), 813-838.
 #'
-#' 
+#'
 #' @author Christoph Rust
 #'
 #' @seealso EstFLM, GlobalTest
@@ -48,23 +48,23 @@ GlobalTest <- function(obj, null, type="F", intercept = TRUE){
         if (is.numeric(null) && (length(null) != p)){
 
             stop(gettext("Wrongly specified null!\nIf specified as numeric vector, it needs to be of same length as the number of discretization points used in '%s': %i", obj, p))
-            
+
         } else if (is.list(null) &&
                    (!all(names(null) %in% c("basis","coefs")) ||
                     (dim(null$basis)[1] != p ||
                      dim(null$basis)[2] != length(null$coefs)))){
 
             stop("Wrongly specified null!\nIf specified as basis expansion 'null' must contain both a basis (matric of dimension p times k) and coefs (vector of length k)!")
-            
+
         } else if (!is.list(null) && !is.numeric(null)){
             stop("Wrongly specified null! Please consult the help file.")
         }
     }
-    
+
     if (missing(type) || type == "F"){
         ## RSS of full model
         RSSfull <- sum(obj$residuals^2)
-        
+
         ## RSS of null model
         beta0 <- if (missing(null)){
                      NULL
@@ -73,14 +73,14 @@ GlobalTest <- function(obj, null, type="F", intercept = TRUE){
                  } else {
                      null$basis %*% null$coefs
                  }
-        
+
         RSSnull <- if (missing(null)){
                        sum( (obj$data$y - if(intercept) mean(obj$data$y) else 0)^2)
                    } else {
                        sum( (obj$data$y -  obj$data$X[,1:p, drop=FALSE] %*% beta0/p -
                              if(intercept) mean(obj$data$y) else 0)^2)
                    }
-        
+
 
         ## Test statistic
         Tf <- ( (RSSnull - RSSfull) / (df1 <- obj$model$effDf + obj$model$intercept - intercept) ) /
@@ -99,8 +99,8 @@ GlobalTest <- function(obj, null, type="F", intercept = TRUE){
     } else {
         stop("Currently only the F-test is supported!")
     }
-    
-    
+
+
     ## collect return
     obj <- list(statistic = Tf,
                 df = c(df1,df2),
