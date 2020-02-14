@@ -1,0 +1,33 @@
+
+
+
+
+## emacs backups
+*.R~
+*.c~
+NAMESPACE~
+DESCRIPTION~
+Makevars~
+Makefile~
+*.tex~
+*.bib~
+*.cls~
+*.sty~
+
+
+
+## unnecessary files
+*.pdf
+*.bbl
+*.aux
+*.log
+*.out
+*.blg
+
+
+## files generated during compilation
+*.so
+*.o
+
+
+.gitignore
