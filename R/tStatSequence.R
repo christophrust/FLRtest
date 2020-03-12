@@ -1,5 +1,38 @@
+#' Test Sequence for directed Test
+#'
+#' This function is used by \code{dirTest} and calls the underlying C routine
+#' \code{tstatseq}.
+#'
+#' @param obj A fitted model object of class "flm", as returned by
+#' \code{EstFLM}
+#'
+#' @param null An optional global function to test against. The null
+#' can be specified as a vector holding the discretized function object or,
+#' alternatively, as an expansion of a given basis system. Defaults to
+#' the zero function.
+#'
+#' @param startval Grad value where the sequential test starts. Currently this
+#' has no effect and the procedure starts at the left border of the domain.
+#'
+#' @param direction One of "right", "left", "both". Specifies into which direction
+#' from \code{startval} to procedure is applied.
+#'
+#' @param gridvals Currently without effect.
+#'
+#' @param maxit The maximum number of iterations in the root finding routine used
+#' to relate the smoothing parameter \equation{\rho} and \code{df}.
+#'
+#' @param tol Tolerance for the numerical routine used to relate the smoothing
+#' parameter \equation{\rho} and \code{df}.
+#'
+#'
+#' @return A matrix with \code{p} rows and 7 columns. The first six columns
+#' contain all the information used to calculate the test statistic and the
+#' seventh contains the corresponding (approximate) p value.
+#'
+#'
+#'
 #' @useDynLib FLRtest
-
 testseq <- function(obj, null, startval, direction, gridvals = NULL,
                     maxit = 1000L, tol = .Machine$double.eps^0.25) {
 
@@ -17,7 +50,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
         direction <- "right"
 
     if (!(direction %in% c("right","left","both"))) {
-        stop("direction must be either of 'right', 'left' or 'both'!") 
+        stop("direction must be either of 'right', 'left' or 'both'!")
     }
 
     if (!is.null(gridvals)) {
