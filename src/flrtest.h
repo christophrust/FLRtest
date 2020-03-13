@@ -6,6 +6,7 @@
 #include <R_ext/Lapack.h>
 
 
+/* structure containing pointers to the necessary objects for model estimation*/
 struct callinfo {
   double *npXtX; // pointer to matrix 1/(Np) X'X
   double *X;     // pointer to matrix X
@@ -20,7 +21,7 @@ struct callinfo {
 
 
 
-
+/* taken from  src/library/stats/src/zeroin.c */
 double R_zeroin2(			/* An estimate of the root */
     double ax,				/* Left border | of the range	*/
     double bx,				/* Right border| the root is seeked*/
