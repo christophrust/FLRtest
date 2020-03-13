@@ -3,13 +3,51 @@
 #include <R_ext/Lapack.h>
 #include "flrtest.h"
 
+/*
+  estmodel computes RSS, effective degrees of freedom or coefficient function
+  for a smoothing spline estimation of a functional linear model. Via a selector,
+  some parts of the coefficient function can be restricted to a specified value.
+
+  Inputs:
+   - model: a pointer to a callinfo stuct (defined in flrtest.h) containing all the
+       relevant data and model parameters for the fit.
+   - logrho: predefined smoothing parameter
+   - retbeta: if zero, rss and edf are computed otherwise the coefficientfunction
+
+  Output:
+   A pointer to a double array. Either of length 2 (retbeta == 0) or of lenght
+   model->selector (retbeta == 1).
+
+
+  Details:
+   The entry model->selector is an integer which in the currect implementation
+   marks the end on the right hand side of the unrestricted domain.
+
+   The model estimate is obtained as follows after subsetting entries (1:selector) of
+   rows and columns respectively of all matrices:
+
+   - for beta:
+     (npXtX + rho * Am)^{-1} Xt y
+   - for rss:
+     ((npXtX + rho * Am)^{-1} Xt y) - y
+   - for edf:
+     trace(X  (npXtX + rho * Am)^{-1} Xt)
+
+   Here, every matrix multiplication is a call to the Fortran routine dgemm and
+   the matrix inversion is obtained by using dpotrf (cholesky) and
+   dpotri (inverse based on cholesky).
+*/
+
 
 double * estmodel(struct callinfo *model, double logrho, int retbeta){
 
-  double * res;
-
+  // initialize container objects for intermediate results
   double * npXtXplusA, *npXtXplusA1Xt, *npXtXy;
+
+  // helper variables
   int i, j, ll, ur, cnt, add, info;
+
+  // obtain the information from the callinfo
   int dim = *model->dim;
   int selector = model->selector;
   int n= *model->n;
@@ -17,13 +55,17 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
   double exprho = exp(logrho);
   double edf = 0, rss=0, yi = 0;
 
+  // variables used in the fortran routines
   double alpha = 1/ ((double) *model->n);
   double beta = 0;
 
-
+  // allocate memory for all arrays containing intermediate results
   npXtXplusA = (double *) Calloc( ( selector * selector), double);
   npXtXplusA1Xt = (double *) Calloc( (selector * (*model->n)), double);
   npXtXy = (double *) Calloc( selector, double);
+
+  // initialize return object and allocate memory
+  double * res;
 
   if (retbeta){
     res = (double *) Calloc(selector, double);
@@ -31,6 +73,7 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
     res = (double *) Calloc(2, double);
   }
 
+  // compute npXtXplusA by using subsets of npXtX and Amat
   // select rows and columns according to selector
   if (selector > dim){
 
@@ -38,24 +81,25 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
 
   } else if (selector == dim){
 
+    // then this is the full model
     for (i=0; i< (dim * dim); i++){
       npXtXplusA[i] = model->npXtX[i] + exprho * model->Amat[i];
     }
 
   } else {
 
-    cnt = 1;
-    add = 0;
+    cnt = 1;  // we use cnt to know in wich row of the matrix we are
+    add = 0;  // how many entries we skip whenever we jump from one column to the next
 
     for (i=0; i< (selector * selector); i++, cnt++){
 
       // Rprintf("cnt: %i; selector: %i; small: %i; large: %i\n",cnt, selector, i, i+add);
       npXtXplusA[i] = model->npXtX[i + add] +  exprho * model->Amat[i+add];
 
-      // jump to next column
+      // jump to next column and increase add by the number of jumped entries
       if (cnt == selector){
-	add += (dim - selector);
-	cnt = 0;
+        add += (dim - selector);
+        cnt = 0;
       }
     }
   }
@@ -64,7 +108,7 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
   F77_CALL(dpotrf)("U",&selector, npXtXplusA, &selector, &info);
 
   if (info){
-    error("Error when using cholesky decomposition, Info = %i!", info);
+    error("Error ocurred during cholesky decomposition, Info = %i!", info);
   } else {
 
     F77_CALL(dpotri)("U",&selector, npXtXplusA, &selector, &info);
@@ -72,7 +116,7 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
 
   if (info){
 
-    error("Error when inverting after cholesky!");
+    error("Error ocurred while inverting after the cholesky decomposition!");
   } else {
 
     // make matrix symmetric
@@ -91,6 +135,7 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
   }
 
   if (retbeta){
+
     // compute beta
     for (i = 0; i < selector; i++){
       res[i] = 0.0;
@@ -107,6 +152,7 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
     return res;
   }
 
+  // if edf and rss are to be returned
   // compute trace of X * npXtXplusA1Xt
   for (i=0; i<n; i++){
     for (j=0; j<selector; j++){
