@@ -39,7 +39,10 @@ summary.flm.test <- function(object,...){
 ## plot method for flm (estimation object)
 #' @export
 plot.flm <- function(x,...){
+
     cat("Yet to be implemented...\n")
+    plot(x = seq(0,1,length.out = length(x$coefficients$beta)),
+         y = x$coefficients$beta, type = "l")
 }
 
 
