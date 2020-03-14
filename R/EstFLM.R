@@ -40,6 +40,8 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
 
     if (missing(X)) stop("No functional predictors specified.")
     if (missing(y)) stop("No dependent variable specified.")
+    if (missing(df) & identical(type, "spline"))
+        stop("For a predefined spline basis, please define df")
 
     Nobs <- length(y)
     p <- dim(X)[2]
@@ -135,8 +137,27 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
         effDf <- ncol(efuncs)
 
 
+    } else if (type == "spline") {
+
+        ## create basis
+        basis <- bs(x = grd, df = df, intercept = FALSE)
+
+        ## product of X and basis
+        pXBasis <- 1/p * X %*% basis
+
+        ## include intercept
+        if (intercept) pXBasis <- cbind(1,pXBasis)
+
+        ## compute least square estimate
+        res <- lm.fit(x = pXBasis, y = y)
+
+        ## store resulst
+        beta <- c(res$coefficients[1], basis %*% res$coefficients[-1])
+        effDf <- length(beta)
+        yHat <- res$fitted
+
     } else{
-        stop(sprintf("type '%s' not a valid estimation specification!", model$type))
+        stop(sprintf("type '%s' not a valid estimation specification!", type))
     }
 
     ## return stuff
@@ -155,7 +176,9 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
                                  evals = eigendec$values,
                                  K = K) else NULL,
                      smspl = if (type=="smoothspline") list(npXtX = NPXtX,
-                                  A_m = splMat$A_m) else NULL
+                                                            A_m = splMat$A_m) else NULL,
+                     spline = if (type = "spline") list(basis = basis,
+                                                        lmfit = res) else NULL
                      ),
         data = list(y=y, X=if (intercept) X[,-1, drop = FALSE] else X)
     )
