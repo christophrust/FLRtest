@@ -7,7 +7,7 @@
 
 
 
-static double dfgrho(double x, struct callinfo *info){
+static double dfgrho(double x, struct callinfo_smspl *info){
   double res;
   res = dfGivenRho(x, info->npXtX, info->X,
 		   info->Amat, *info->n, *info->dim, *info->p);
@@ -67,7 +67,7 @@ SEXP tstatseq_smspl(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
   double *fullmodel, *nullmodel;
 
   // structure info containing the neccessary information for the call to dfgrho
-  struct callinfo info;
+  struct callinfo_smspl info;
 
   info.npXtX = REAL(npXtX);
   info.X = REAL(X);

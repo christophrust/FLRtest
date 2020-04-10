@@ -39,7 +39,7 @@
 */
 
 
-double * estmodel_smspl(struct callinfo *model, double logrho, int retbeta){
+double * estmodel_smspl(struct callinfo_smspl *model, double logrho, int retbeta){
 
   // initialize container objects for intermediate results
   double * npXtXplusA, *npXtXplusA1Xt, *npXtXy;
@@ -210,7 +210,7 @@ SEXP R_estmodel_smspl(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SE
 
   double * result;
 
-  struct callinfo model;
+  struct callinfo_smspl model;
 
   model.npXtX = REAL(npXtX);
   model.X = REAL(X);
