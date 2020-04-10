@@ -9,7 +9,7 @@ set.seed(123)
 p <- 100
 N <- 200
 grd <- seq(0,1,length = p)
-X <- t(bs(x= grd, df = p, intercept = TRUE) %*% matrix(rnorm( N * (p+1) ), ncol = N))
+X <- t(bs(x= grd, df = p, intercept = TRUE) %*% matrix(rnorm( N * (p) ), ncol = N))
 beta <- sin(10*grd)
 y <- X %*% beta/p + rnorm(N, sd=0.1)
 obj <- EstFLM(y, X, type = "smoothspline", rho = 0.00000001, intercept = TRUE)
@@ -42,17 +42,17 @@ class(obj1) <- "abc"
 
 if (0){
     test_that("Input checking",{
-        
+
         ## correct class of object
         expect_error(tStatSequence(1:10))
-        
+
         ## correct estimation method
         expect_error(tStatSequence(obj1))
-        
+
         ##expect_warning(tStatSequence(obj, direction = "left"))
         ##expect_warning(tStatSequence(obj, startval = 1))
         ##expect_warning(tStatSequence(obj, gridvals = (0:99)/99))
-        
+
     })
 }
 
@@ -62,61 +62,68 @@ test_that("c-routine",{
     #cc <- chol(obj$model$smspl$npXtX + exp(-2.3) * Amats[,,1])
     print(N)
     expect_equal(
-        .Call("tstatseq", y=y, X = X,
+        .Call("tstatseq_smspl", y=y, X = X,
               Amats = as.vector(Amats),
               p = as.integer(p),
               n = as.integer(N),
               df = obj$model$effDf,
               npXtX = obj$model$smspl$npXtX,
-              PACKAGE = "FLRtest")
+              tol = 1e-8,
+              maxit = 1000L,
+              intercept = 1L,
+              PACKAGE = "FLRtest")[,6]
        ,
-        matrix(NA, nrow = p-1, ncol = 4))
+        t(tStatSequenceR(obj))[,1])
 
-    
-    a <- matrix(rnorm(9), ncol = 3)
-    b <- matrix(rnorm(9), ncol = 3)
-    expect_equal(
-        .Call("matmult", a = a, b = b,
-              PACKAGE = "FLRtest"),
-        a %*% b)
+
+    ## a <- matrix(rnorm(9), ncol = 3)
+    ## b <- matrix(rnorm(9), ncol = 3)
+    ## expect_equal(
+    ##     .Call("matmult", a = a, b = b,
+    ##           PACKAGE = "FLRtest"),
+    ##     a %*% b)
 })
 
 
-
-devtools::load_all()
-mm <- matrix(rnorm(100), ncol = 10)
-mm1 <- matrix(rnorm(100), ncol = 10)
-A <- tcrossprod(mm)
-npXtx <- tcrossprod(mm1)
-yy <- rnorm(20)
-x <- matrix(rnorm(200), ncol = 10)
-
-
-aaaa <- .Call("tstatseq", y=yy, X = x,
-      Amats = A,
-      p = 10L,
-      n = 20L,
-      df = 2,
-      npXtX = npXtx,
-      PACKAGE = "FLRtest")
+if (0){
+    devtools::load_all()
+    mm <- matrix(rnorm(100), ncol = 10)
+    mm1 <- matrix(rnorm(100), ncol = 10)
+    A <- tcrossprod(mm)
+    npXtx <- tcrossprod(mm1)
+    yy <- rnorm(20)
+    x <- matrix(rnorm(200), ncol = 10)
 
 
+    aaaa <- .Call("tstatseq_smspl", y=yy, X = x,
+                  Amats = A,
+                  p = 10L,
+                  n = 20L,
+                  df = 2,
+                  npXtX = npXtx,
+                  PACKAGE = "FLRtest")
 
-.Call("tstatseq", y=y, X = X,
-              Amats = Amats[,,1],
-              p = as.integer(p),
-              n = as.integer(N),
-              df = obj$model$effDf,
-              npXtX = obj$model$smspl$npXtX,
-      PACKAGE = "FLRtest")
 
 
-dfGivenRho <- function(lrho , X, npXtX, Amat){
-    
-    XtX1Xt <- 1/nrow(X) * chol2inv( chol( npXtX + exp(lrho) * Amat)) %*% t(X)
-    sum(vapply(1:nrow(X), function(i)  sum(x[i,] * XtX1Xt[,i]),0))/ncol(X)
-    
+    .Call("tstatseq_smspl", y=y, X = X,
+          Amats = Amats[,,1],
+          p = as.integer(p),
+          n = as.integer(N),
+          df = obj$model$effDf,
+          npXtX = obj$model$smspl$npXtX,
+          tol = 1e-8,
+          maxit = 1000L,
+          intercept = 1L,
+          PACKAGE = "FLRtest")
+
+
+    dfGivenRho <- function(lrho , X, npXtX, Amat){
+
+        XtX1Xt <- 1/nrow(X) * chol2inv( chol( npXtX + exp(lrho) * Amat)) %*% t(X)
+        sum(vapply(1:nrow(X), function(i)  sum(x[i,] * XtX1Xt[,i]),0))/ncol(X)
+
+    }
+
+
+    dfGivenRho(0, X, obj$model$smspl$npXtX, Amats[,,1])
 }
-
-
-dfGivenRho(0, X, obj$model$smspl$npXtX, Amats[,,1])
