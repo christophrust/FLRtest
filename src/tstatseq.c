@@ -42,7 +42,7 @@ static double dfgrho(double x, struct callinfo *info){
      5. logarithm of smoothing parameter rho
      6. test statistic (see manuscript)
  */
-SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
+SEXP tstatseq_smspl(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 	      SEXP npXtX, SEXP tol, SEXP maxit,SEXP intercept){
 
   // obtain input variables and initialize pointers to these objects
@@ -99,7 +99,7 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 
     // estimate full model
     info.selector = dim;
-    fullmodel = estmodel(&info, logrho,0);
+    fullmodel = estmodel_smspl(&info, logrho,0);
 
     // Rprintf("[%i] df1: %f, df2: %f, lrho: %f\n",j, dfgrho(logrho, &info)+*info.df,fullmodel[0], logrho);
 
@@ -114,7 +114,7 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
     }
 
 
-    nullmodel = estmodel(&info, logrho,0);
+    nullmodel = estmodel_smspl(&info, logrho,0);
 
     REAL(res)[j +2*(np-1)] = nullmodel[0]; // 3rd col: rss of null model
     REAL(res)[j +3*(np-1)] = nullmodel[1]; // 4th col: edf of null model
@@ -145,9 +145,9 @@ SEXP tstatseq(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 
 
 static const R_CallMethodDef CallEntries[] = {
-    {"tstatseq", (DL_FUNC) &tstatseq, 10},
+    {"tstatseq_smspl", (DL_FUNC) &tstatseq_smspl, 10},
     {"R_dfGivenRho", (DL_FUNC) &R_dfGivenRho, 7},
-    {"R_estmodel", (DL_FUNC) &R_estmodel, 11},
+    {"R_estmodel_smspl", (DL_FUNC) &R_estmodel_smspl, 11},
     {NULL, NULL, 0}
 };
 

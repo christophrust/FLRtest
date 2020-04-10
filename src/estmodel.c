@@ -39,7 +39,7 @@
 */
 
 
-double * estmodel(struct callinfo *model, double logrho, int retbeta){
+double * estmodel_smspl(struct callinfo *model, double logrho, int retbeta){
 
   // initialize container objects for intermediate results
   double * npXtXplusA, *npXtXplusA1Xt, *npXtXy;
@@ -195,7 +195,7 @@ double * estmodel(struct callinfo *model, double logrho, int retbeta){
 
 /* R wrapper for above function */
 
-SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho, SEXP retbeta){
+SEXP R_estmodel_smspl(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho, SEXP retbeta){
 
 
   int lres;
@@ -223,7 +223,7 @@ SEXP R_estmodel(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df, SEXP n, SEXP p, 
   model.selector = *INTEGER(selector);
 
 
-  result = estmodel(&model, *REAL(logrho), *INTEGER(retbeta));
+  result = estmodel_smspl(&model, *REAL(logrho), *INTEGER(retbeta));
 
 
   for (int i=0; i<lres; i++){
