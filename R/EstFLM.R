@@ -177,7 +177,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho
                                  K = K) else NULL,
                      smspl = if (type=="smoothspline") list(npXtX = NPXtX,
                                                             A_m = splMat$A_m) else NULL,
-                     spline = if (type = "spline") list(basis = basis,
+                     spline = if (type == "spline") list(basis = basis,
                                                         lmfit = res) else NULL
                      ),
         data = list(y=y, X=if (intercept) X[,-1, drop = FALSE] else X)
