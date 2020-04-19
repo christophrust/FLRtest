@@ -133,7 +133,7 @@ evaluate(splPTR sp, double x, int nder)
 /* called from	splineDesign() : */
 double *
 spline_basis(double * knots, int order, double * xvals, int * derivs,
-             )
+             int nk, int nx, int nd)
 {
   /* evaluate the non-zero B-spline basis functions (or their derivatives)
    * at xvals.  */
