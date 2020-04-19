@@ -64,5 +64,6 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta);
 double * spline_basis(double *knots, int order, double *xvals, int *derivs,
                       int nk, int nx, int nd);
 
+SEXP R_spline_basis(SEXP knots, SEXP order, SEXP xvals, SEXP derivs);
 #endif
 

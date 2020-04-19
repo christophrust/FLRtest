@@ -132,52 +132,78 @@ evaluate(splPTR sp, double x, int nder)
 
 /* called from	splineDesign() : */
 double *
-spline_basis(double * knots, int order, double * xvals, int * derivs,
+spline_basis(double *knots, int order, double *xvals, int *derivs,
              int nk, int nx, int nd)
 {
   /* evaluate the non-zero B-spline basis functions (or their derivatives)
    * at xvals.  */
 
-  PROTECT(knots = coerceVector(knots, REALSXP));
-  double *kk = REAL(knots); int nk = length(knots);
-  int ord = asInteger(order);
-  PROTECT(xvals = coerceVector(xvals, REALSXP));
-  double *xx = REAL(xvals); int nx = length(xvals);
-  PROTECT(derivs = coerceVector(derivs, INTSXP));
-  int *ders = INTEGER(derivs), nd = length(derivs);
+
+  // PROTECT(knots = coerceVector(knots, REALSXP));
+  // double *kk = REAL(knots); int nk = length(knots);
+  // int ord = asInteger(order);
+  // PROTECT(xvals = coerceVector(xvals, REALSXP));
+  // double *xx = REAL(xvals); int nx = length(xvals);
+  // PROTECT(derivs = coerceVector(derivs, INTSXP));
+  // int *ders = INTEGER(derivs), nd = length(derivs);
 
   splPTR sp = (struct spl_struct *) R_alloc(1, sizeof(struct spl_struct));
+
   /* fill sp : */
-  sp->order = ord;
-  sp->ordm1 = ord - 1;
+  sp->order = order;
+  sp->ordm1 = order - 1;
   sp->rdel = (double *) R_alloc(sp->ordm1, sizeof(double));
   sp->ldel = (double *) R_alloc(sp->ordm1, sizeof(double));
-  sp->knots = kk; sp->nknots = nk;
+  sp->knots = knots; sp->nknots = nk;
   sp->a = (double *) R_alloc(sp->order, sizeof(double));
-  SEXP val = PROTECT(allocMatrix(REALSXP, sp->order, nx)),
-    offsets = PROTECT(allocVector(INTSXP, nx));
-  double *valM = REAL(val);
-  int *ioff = INTEGER(offsets);
+
+  double * val;
+  int *offsets;
+  val = (double *) Calloc((sp->order * nx), double);
+  offsets = (int *) Calloc(nx, int);
+
+
+  /* SEXP val = PROTECT(allocMatrix(REALSXP, sp->order, nx)), */
+  /*   offsets = PROTECT(allocVector(INTSXP, nx)); */
+  /* double *valM = REAL(val); */
+  /* int *ioff = INTEGER(offsets); */
 
   for(int i = 0; i < nx; i++) {
-    set_cursor(sp, xx[i]);
-    int io = ioff[i] = sp->curs - sp->order;
+    set_cursor(sp, xvals[i]);
+    int io = offsets[i] = sp->curs - sp->order;
     if (io < 0 || io > nk) {
 	    for (int j = 0; j < sp->order; j++) {
-        valM[i * sp->order + j] = R_NaN;
+        val[i * sp->order + j] = R_NaN;
 	    }
-    } else if (ders[i % nd] > 0) { /* slow method for derivatives */
+    } else if (derivs[i % nd] > 0) { /* slow method for derivatives */
 	    for(int ii = 0; ii < sp->order; ii++) {
         for(int j = 0; j < sp->order; j++) sp->a[j] = 0;
         sp->a[ii] = 1;
-        valM[i * sp->order + ii] =
-          evaluate(sp, xx[i], ders[i % nd]);
+        val[i * sp->order + ii] =
+          evaluate(sp, xvals[i], derivs[i % nd]);
 	    }
     } else {		/* fast method for value */
-	    basis_funcs(sp, xx[i], valM + i * sp->order);
+	    basis_funcs(sp, xvals[i], val + i * sp->order);
     }
   }
-  setAttrib(val, install("Offsets"), offsets);
-  UNPROTECT(5);
+  // setAttrib(val, install("Offsets"), offsets);
+  // UNPROTECT(5);
   return val;
+}
+
+// Wrapper around above function to make code accessible from R
+SEXP R_spline_basis(SEXP knots, SEXP order, SEXP xvals, SEXP derivs){
+
+
+  int nk = length(knots);
+  int nx = length(xvals);
+  int nd = length(derivs);
+
+  SEXP res = PROTECT(allocMatrix(REALSXP, *INTEGER(order), nx));
+  double *val = REAL(res);
+
+  val = spline_basis(REAL(knots), *INTEGER(order), REAL(xvals), INTEGER(derivs), nk, nx, nd);
+
+  UNPROTECT(1);
+  return res;
 }
