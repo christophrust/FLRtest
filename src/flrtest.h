@@ -20,6 +20,18 @@ struct callinfo_smspl {
 };
 
 
+struct callinfo_spl {
+  double *X;     // pointer to matrix X
+  double *y;     // pointer to vector y
+  double *Basis; // pointer to matrix containing evaluated B spline basis. Basis has to be
+                 // created using the function SplitModelBasis()
+  int *n;        // pointer to number of obs
+  int *p;        // pointer to dimension of full model (p+1) if intercept is included
+  int *dim;      // pointer to dimension of the model (number of colums of Basis)
+  int selector;  // mutable selector (selecting subset of model)
+};
+
+
 
 /* taken from  src/library/stats/src/zeroin.c */
 double R_zeroin2(			/* An estimate of the root */
@@ -44,7 +56,13 @@ double * estmodel_smspl(struct callinfo_smspl *model, double rho, int retbeta);
 SEXP R_estmodel_smspl(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df,
                 SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho, SEXP retbeta);
 
+
+
+double * estmodel_spl(struct callinfo_spl *model, int retbeta);
 // SEXP matmult(SEXP a, SEXP b);
+
+double * spline_basis(double *knots, int order, double *xvals, int *derivs,
+                      int nk, int nx, int nd);
 
 #endif
 
