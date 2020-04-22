@@ -148,6 +148,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"tstatseq_smspl", (DL_FUNC) &tstatseq_smspl, 10},
     {"R_dfGivenRho", (DL_FUNC) &R_dfGivenRho, 7},
     {"R_estmodel_smspl", (DL_FUNC) &R_estmodel_smspl, 11},
+    {"R_spline_basis",(DL_FUNC) &R_spline_basis, 4},
     {NULL, NULL, 0}
 };
 
