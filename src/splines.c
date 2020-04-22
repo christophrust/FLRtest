@@ -157,14 +157,18 @@ spline_basis(double *knots, int order, double *xvals, int *derivs,
   sp->knots = knots; sp->nknots = nk;
   sp->a = (double *) R_alloc(sp->order, sizeof(double));
 
-  double * val;
+  double * val, *res;
   int *offsets;
-  val = (double *) Calloc((sp->order * nx), double);
-  offsets = (int *) Calloc(nx, int);
 
+  val = (double *) R_alloc((sp->order * nx), sizeof(double));
+  res = (double *) R_alloc(((nk - sp->order) * nx), sizeof(double));
+  offsets = (int *) R_alloc(nx, sizeof(int));
+
+  // initialize array res to zero
+  for (int i=0; i < ((nk - sp->order) * nx); i++) res[i] = 0.0;
 
   /* SEXP val = PROTECT(allocMatrix(REALSXP, sp->order, nx)), */
-  /*   offsets = PROTECT(allocVector(INTSXP, nx)); */
+  /* offsets = PROTECT(allocVector(INTSXP, nx)); */
   /* double *valM = REAL(val); */
   /* int *ioff = INTEGER(offsets); */
 
@@ -186,23 +190,45 @@ spline_basis(double *knots, int order, double *xvals, int *derivs,
 	    basis_funcs(sp, xvals[i], val + i * sp->order);
     }
   }
+
+  // construct the final matrix according to R function splineDesign assuming
+  // no outer knots and dense design
+  int cnt=0;
+  for (int i = 0; i < nx; i++){
+    for (int j=0; j<order; j++){
+      /* Rprintf("i=%i, j=%i, arraypos = %i, val = %f\n", */
+      /*         i, */
+      /*         j + offsets[i], */
+      /*         i + (j + offsets[i]) * nx, */
+      /*         val[cnt]); */
+
+      res[ i + (j + offsets[i]) * nx ] = val[cnt];
+      cnt++;
+    }
+  }
+
   // setAttrib(val, install("Offsets"), offsets);
   // UNPROTECT(5);
-  return val;
+  return res;
 }
 
 // Wrapper around above function to make code accessible from R
 SEXP R_spline_basis(SEXP knots, SEXP order, SEXP xvals, SEXP derivs){
 
-
+  // we assume, the arguments are provided properly, therefore no checking
   int nk = length(knots);
   int nx = length(xvals);
   int nd = length(derivs);
 
-  SEXP res = PROTECT(allocMatrix(REALSXP, *INTEGER(order), nx));
-  double *val = REAL(res);
+  SEXP res = PROTECT(allocMatrix(REALSXP, nx, nk - *INTEGER(order)));
+  double *val;
 
   val = spline_basis(REAL(knots), *INTEGER(order), REAL(xvals), INTEGER(derivs), nk, nx, nd);
+
+  // copy the values as the pointer seems to be difficult to access from outside
+  for (int i=0; i < ((nk - *INTEGER(order)) * nx); i++){
+    REAL(res)[i] = val[i];
+  }
 
   UNPROTECT(1);
   return res;
