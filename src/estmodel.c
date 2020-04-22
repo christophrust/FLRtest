@@ -9,14 +9,15 @@
   some parts of the coefficient function can be restricted to a specified value.
 
   Inputs:
-   - model: a pointer to a callinfo stuct (defined in flrtest.h) containing all the
+   - model: a pointer to a callinfo_smspl stuct (defined in flrtest.h) containing all the
        relevant data and model parameters for the fit.
    - logrho: predefined smoothing parameter
    - retbeta: if zero, rss and edf are computed otherwise the coefficientfunction
 
   Output:
-   A pointer to a double array. Either of length 2 (retbeta == 0) or of lenght
-   model->selector (retbeta == 1).
+   A pointer to a double array. Either of length 2 (retbeta == 0), in which case
+   rss and edf is returned, or of lenght model->selector (retbeta == 1), then beta
+   itself is returned.
 
 
   Details:

@@ -1,4 +1,5 @@
-if (0) {library(FLRtest)
+if (0) {
+    devtools::load_all()
     library(splines)
 }
 if (1){
