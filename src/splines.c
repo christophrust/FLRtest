@@ -190,7 +190,7 @@ spline_basis(double *knots, int order, double *xvals, int *derivs,
 	    basis_funcs(sp, xvals[i], val + i * sp->order);
     }
   }
-
+  //Rprintf("test1\n");
   // construct the final matrix according to R function splineDesign assuming
   // no outer knots and dense design
   int cnt=0;
@@ -206,7 +206,7 @@ spline_basis(double *knots, int order, double *xvals, int *derivs,
       cnt++;
     }
   }
-
+  // Rprintf("test1\n");
   // setAttrib(val, install("Offsets"), offsets);
   // UNPROTECT(5);
   return res;

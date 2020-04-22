@@ -65,5 +65,7 @@ double * spline_basis(double *knots, int order, double *xvals, int *derivs,
                       int nk, int nx, int nd);
 
 SEXP R_spline_basis(SEXP knots, SEXP order, SEXP xvals, SEXP derivs);
+
+SEXP R_SplitSplineBasis(SEXP grd, SEXP df, SEXP splitpoint);
 #endif
 
