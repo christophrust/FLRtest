@@ -42,8 +42,10 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   double *res;
 
   /* allocate space for necessary intermediate results */
-  double *pXB;   // 1/p * X * B
+  double *pXB;   // 1/p * X * Basis
   pXB = (double *) R_alloc( *model->n * *model->p, sizeof(double));
+
+
 
 
   return res;
