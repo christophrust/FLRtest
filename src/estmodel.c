@@ -43,7 +43,7 @@
 double * estmodel_smspl(struct callinfo_smspl *model, double logrho, int retbeta){
 
   // initialize container objects for intermediate results
-  double * npXtXplusA, *npXtXplusA1Xt, *npXtXy;
+  double * npXtXplusA, *npXtXplusA1Xt, *npXtX1Xty;
 
   // helper variables
   int i, j, ll, ur, cnt, add, info;
@@ -63,7 +63,6 @@ double * estmodel_smspl(struct callinfo_smspl *model, double logrho, int retbeta
   // allocate memory for all arrays containing intermediate results
   npXtXplusA = (double *) Calloc( ( selector * selector), double);
   npXtXplusA1Xt = (double *) Calloc( (selector * (*model->n)), double);
-  npXtXy = (double *) Calloc( selector, double);
 
   // initialize return object and allocate memory
   double * res;
@@ -148,10 +147,11 @@ double * estmodel_smspl(struct callinfo_smspl *model, double logrho, int retbeta
     // Free memory
     Free(npXtXplusA1Xt);
     Free(npXtXplusA);
-    Free(npXtXy);
 
     return res;
   }
+
+  npXtX1Xty = (double *) Calloc( selector, double);
 
   // if edf and rss are to be returned
   // compute trace of X * npXtXplusA1Xt
@@ -162,20 +162,20 @@ double * estmodel_smspl(struct callinfo_smspl *model, double logrho, int retbeta
   }
 
   /* compute RSS of model */
-  // 1. XtX %*% y
+  // 1. XtX^(-1) %*% Xt %*% y
   for (i = 0; i < selector; i++){
-    npXtXy[i] = 0;
+    npXtX1Xty[i] = 0;
     for (j=0; j < n; j++){
-      npXtXy[i] +=( npXtXplusA1Xt[selector * j + i] * ( model->y[j] ));
+      npXtX1Xty[i] +=( npXtXplusA1Xt[selector * j + i] * ( model->y[j] ));
     }
 
   }
 
-  // 2. aggregate (X %*% XtX %*%y /p - y)^2
+  // 2. aggregate (X %*% XtX^(-1) %*% Xt %*% y /p - y)^2
   for (i = 0; i<n; i++){
     yi = 0;
     for (j = 0; j<selector; j++){
-      yi += model->X[ j * n + i ] * npXtXy[j];
+      yi += model->X[ j * n + i ] * npXtX1Xty[j];
     }
     rss += pow( yi/ ((double) p) - model->y[i], 2);
   }
@@ -183,7 +183,7 @@ double * estmodel_smspl(struct callinfo_smspl *model, double logrho, int retbeta
   // Free memory
   Free(npXtXplusA1Xt);
   Free(npXtXplusA);
-  Free(npXtXy);
+  Free(npXtX1Xty);
 
   // sum( (X[,selector] %*% XtX1Xt %*% y * 1/p - y)^2 )
   res[1] = rss;
