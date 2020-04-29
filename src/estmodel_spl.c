@@ -98,6 +98,36 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   /*   Rprintf("%f; ", XtX[i]); */
   /* } */
 
+  /* invert XtX using cholesky decomposition */
+  int info, ll, ur;
+
+  F77_CALL(dpotrf)("U", model->dim, XtX, model->dim, &info);
+
+  if (info){
+    error("Error ocurred during cholesky decomposition, Info = %i!", info);
+  } else {
+
+    F77_CALL(dpotri)("U", model->dim, XtX, model->dim, &info);
+  }
+
+  if (info){
+
+    error("Error ocurred while inverting after the cholesky decomposition!");
+  } else {
+
+    // make matrix symmetric
+    for (int j = 0; j<*model->dim; j++){
+      for (int i = j+1; i< *model->dim; i++){
+        ll = j**model->dim + i;
+        ur = i**model->dim + j;
+        XtX[ll] = XtX[ur];
+      }
+    }
+  }
+
+  for (int i=0; i < 10; i++) {
+    Rprintf("%f; ", XtX[i]);
+  }
 
   return res;
 }
