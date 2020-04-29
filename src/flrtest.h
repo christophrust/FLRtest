@@ -26,7 +26,7 @@ struct callinfo_spl {
   double *Basis; // pointer to matrix containing evaluated B spline basis. Basis has to be
                  // created using the function SplitModelBasis()
   int *n;        // pointer to number of obs
-  int *p;        // pointer to dimension of full model (p+1) if intercept is included
+  int *p;        // pointer to number of grid points
   int *dim;      // pointer to dimension of the model (number of colums of Basis)
   int selector;  // mutable selector (selecting subset of model)
 };
@@ -56,10 +56,13 @@ double * estmodel_smspl(struct callinfo_smspl *model, double rho, int retbeta);
 SEXP R_estmodel_smspl(SEXP npXtX, SEXP X, SEXP y, SEXP Amat, SEXP df,
                 SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP logrho, SEXP retbeta);
 
-
+void internal_crossprod(double *x, int nrx, int ncx,
+                      double *y, int nry, int ncy, double *z);
 
 double * estmodel_spl(struct callinfo_spl *model, int retbeta);
 // SEXP matmult(SEXP a, SEXP b);
+
+SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim);
 
 double * spline_basis(double *knots, int order, double *xvals, int *derivs,
                       int nk, int nx, int nd);
