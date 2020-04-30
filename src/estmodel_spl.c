@@ -173,11 +173,22 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP r
   double *val;
   val = estmodel_spl(&model, *INTEGER(retbeta));
 
+  /* copy result into return SEXP */
   SEXP res;
-  res = PROTECT(allocVector(REALSXP, 1));
-  UNPROTECT(1);
+  if (*INTEGER(retbeta)){
+    res = PROTECT(allocVector(REALSXP, *model.p));
+    for (int i = 0; i < *model.p; i++){
+      REAL(res)[i] = val[i];
+    }
+    UNPROTECT(1);
+    return res;
+  }
+
+  res = PROTECT(allocVector(REALSXP, 2));
 
   REAL(res)[0] = val[0];
+  REAL(res)[1] = val[1];
 
+  UNPROTECT(1);
   return res;
 }
