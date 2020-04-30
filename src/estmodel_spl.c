@@ -159,7 +159,7 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
 
 
-SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim) {
+SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP retbeta) {
 
   struct callinfo_spl model;
 
@@ -171,7 +171,7 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim) {
   model.dim = INTEGER(dim);
 
   double *val;
-  val = estmodel_spl(&model, 0);
+  val = estmodel_spl(&model, *INTEGER(retbeta));
 
   SEXP res;
   res = PROTECT(allocVector(REALSXP, 1));
