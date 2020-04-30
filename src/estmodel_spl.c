@@ -146,13 +146,6 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   res[1] = rss;
   res[0] = *model->dim;
 
-  for (int i = 0; i<2; i++){
-    Rprintf("%f\n; ", res[i]);
-  }
-
-  for (int i=0; i < 10; i++) {
-    Rprintf("%f; ", XtX1Xt[i]);
-  }
   return res;
 }
 
@@ -174,6 +167,8 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP r
   val = estmodel_spl(&model, *INTEGER(retbeta));
 
   /* copy result into return SEXP */
+
+  /* functional coefficient */
   SEXP res;
   if (*INTEGER(retbeta)){
     res = PROTECT(allocVector(REALSXP, *model.p));
@@ -184,6 +179,7 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP r
     return res;
   }
 
+  /* rss and df */
   res = PROTECT(allocVector(REALSXP, 2));
 
   REAL(res)[0] = val[0];
