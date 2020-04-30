@@ -1,12 +1,4 @@
-#include <R.h>
-#include <Rinternals.h>
-#include <R_ext/Lapack.h>
 #include "flrtest.h"
-
-
-
-
-
 /*
 
 Function to compute effective degrees of freedom of the smspl

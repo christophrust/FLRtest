@@ -1,10 +1,4 @@
-// #include <float.h>
-// #include <math.h>
-#include <R.h>
-#include <Rinternals.h>
-#include <R_ext/Lapack.h>
 #include "flrtest.h"
-
 
 
 static double dfgrho(double x, struct callinfo_smspl *info){
