@@ -62,43 +62,8 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
                   model->X, model->n, model->Basis, model->p, &beta,
                   pXB, model->n);
 
-  /* compute matrix product by hand: */
-  /* double temp = 0.0; */
-  /* for (int i=0; i < *model->n; i++){ */
-  /*   for (int j = 0; j < *model->dim; j++){ */
-  /*     temp = 0.0; */
-  /*     for (int k =0; k < *model->p; k++){ */
-  /*       temp += model->X[i + k* *model->n] * model->Basis[j * *model->p + k]; */
-  /*     } */
-  /*     pXB1[i + j * *model->dim ] = temp; */
-  /*   } */
-  /* } */
-
-  /* for (int i=0; i < 10; i++){ */
-  /*   Rprintf("%f, ",model->Basis[i]); */
-
-  /* } */
-  /* Rprintf("\n--------\n"); */
-
-
-  /* for (int i=0; i < 10; i++){ */
-  /*   Rprintf("%f, ",model->X[i]); */
-  /* } */
-  /* Rprintf("\n--------\n"); */
-
-
-  /* for (int i=0; i < 10; i++){ */
-  /*   Rprintf("%f, ",pXB[i]); */
-  /* } */
-  /* Rprintf("\n-----a---\n"); */
-
-
   /* compute XtX*/
   internal_crossprod(pXB, *model->n, *model->dim, pXB, *model->n, *model->dim, XtX);
-
-  /* for (int i=0; i < 10; i++) { */
-  /*   Rprintf("%f; ", XtX[i]); */
-  /* } */
 
   /* invert XtX using cholesky decomposition */
   int info, ll, ur;
@@ -114,7 +79,7 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   if (info){
 
-    error("Error ocurred while inverting after the cholesky decomposition!");
+    error("Error ocurred while inverting after cholesky decomposition!");
   } else {
 
     // make matrix symmetric
@@ -127,19 +92,11 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
     }
   }
 
-  /* for (int i=0; i < 10; i++) { */
-  /*   Rprintf("%f; ", XtX[i]); */
-  /* } */
-
   // compute XtX^(-1) * Xt
   alpha = 1.0;
   F77_CALL(dgemm)("n","t", model->dim, model->n,
                   model->dim, &alpha, XtX, model->dim,
                   pXB, model->n, &beta, XtX1Xt, model->dim);
-
-  /* for (int i=0; i < 10; i++) { */
-  /*   Rprintf("%f; ", XtX1Xt[i]); */
-  /* } */
 
 
   /* compute splines coefficient: theta = XtX^(-1) %*% Xt %*% y */
@@ -158,7 +115,7 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   if (retbeta){
 
-    /* compute functional coefficient beta = basis %*% theta */
+    /* compute functional coefficient: beta = basis %*% theta */
     res = (double *) R_alloc(*model->p, sizeof(double));
 
     for (int i = 0; i < *model->p; i++){
