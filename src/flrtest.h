@@ -67,6 +67,9 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP r
 double * spline_basis(double *knots, int order, double *xvals, int *derivs,
                       int nk, int nx, int nd);
 
+SEXP tstatseq_smspl(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
+                    SEXP npXtX, SEXP tol, SEXP maxit,SEXP intercept);
+
 SEXP R_spline_basis(SEXP knots, SEXP order, SEXP xvals, SEXP derivs);
 
 SEXP R_SplitSplineBasis(SEXP grd, SEXP df, SEXP splitpoint);
