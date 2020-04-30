@@ -38,8 +38,6 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   /* array containing result of estimation */
   double *res;
-  res = (double *) R_alloc(1, sizeof(double));
-  res[0] = 2.0;
 
   /* allocate space for necessary intermediate results */
   double *pXB;   // 1/p * X * Basis
@@ -49,12 +47,16 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   double *XtX;
   XtX = (double *) R_alloc( *model->dim * *model->dim, sizeof(double));
 
+  double *XtX1Xt;   // 1/p * X * Basis
+  XtX1Xt = (double *) R_alloc( *model->n * *model->dim, sizeof(double));
+
   /* compute pXB  (1/p * X %*% B)*/
   //double alpha = 1.0;
   double alpha = 1/(double) *model->p;
   double beta = 0.0;
 
-  Rprintf("%i;--\n", (*model->n * *model->dim));
+  double temp = 0.0;
+
 
   F77_CALL(dgemm)("n", "n", model->n, model->dim, model->p, &alpha,
                   model->X, model->n, model->Basis, model->p, &beta,
@@ -125,10 +127,75 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
     }
   }
 
-  for (int i=0; i < 10; i++) {
-    Rprintf("%f; ", XtX[i]);
+  /* for (int i=0; i < 10; i++) { */
+  /*   Rprintf("%f; ", XtX[i]); */
+  /* } */
+
+  // compute XtX^(-1) * Xt
+  alpha = 1.0;
+  F77_CALL(dgemm)("n","t", model->dim, model->n,
+                  model->dim, &alpha, XtX, model->dim,
+                  pXB, model->n, &beta, XtX1Xt, model->dim);
+
+  /* for (int i=0; i < 10; i++) { */
+  /*   Rprintf("%f; ", XtX1Xt[i]); */
+  /* } */
+
+
+  /* compute splines coefficient: theta = XtX^(-1) %*% Xt %*% y */
+  double *theta;
+  theta = (double *) R_alloc(*model->dim, sizeof(double));
+
+  for (int i = 0; i < *model->dim; i++){
+    temp = 0.0;
+    for (int j = 0; j < *model->n; j++){
+      temp += XtX1Xt[i + j * *model->dim] * model->y[j];
+    }
+
+    theta[i] = temp;
+    // Rprintf("%f;;", temp);
   }
 
+  if (retbeta){
+
+    /* compute functional coefficient beta = basis %*% theta */
+    res = (double *) R_alloc(*model->p, sizeof(double));
+
+    for (int i = 0; i < *model->p; i++){
+      temp = 0.0;
+      for (int j = 0; j < *model->dim; j++){
+        temp += model->Basis[i + j * *model->p] * theta[j];
+      }
+
+      res[i] = temp;
+    }
+
+    return res;
+  }
+
+  /* return only rss and df */
+  res = (double *) R_alloc(2, sizeof(double));
+
+  /* compute RSS */
+  double rss = 0.0;
+
+  for (int i = 0; i < *model->n; i++){
+    temp = 0.0;
+    for (int j = 0; j < *model->dim; j++){
+      temp += pXB[i + j* *model->n] * theta[j];
+    }
+    rss += pow(model->y[i] - temp, 2);
+  }
+  res[1] = rss;
+  res[0] = *model->dim;
+
+  for (int i = 0; i<2; i++){
+    Rprintf("%f\n; ", res[i]);
+  }
+
+  for (int i=0; i < 10; i++) {
+    Rprintf("%f; ", XtX1Xt[i]);
+  }
   return res;
 }
 
