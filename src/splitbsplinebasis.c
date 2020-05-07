@@ -42,30 +42,47 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   for (int i = 0; i < 4; i++) knots[i] = 0.0;
   for (int i = df; i < nk; i++) knots[i] = 1.0;
 
-  /* inner knots */
-  for (int i=0; i < nik; i++){
-    if ((knots[j-1] < splitpoint) && ((knots[j-1] + delta) >= splitpoint)) {
+  /*
+   selector holds the index of the last non-zero basis
+   function of the first part of the domain.
+  */
+  int selector = 4;
 
-      if ((splitpoint - knots[j-1]) <= ((knots[j-1] + delta) - splitpoint)) {
-        j--;
-        for (int k=0; k < 4; k++) {
-          knots[j] = splitpoint;
-          j++;
-        }
-        knots[j] = knots[j-5] + 2 * delta; j++;
-        knots[j] = knots[j-1] + delta; j++;
-      } else {
-        for (int k=0; k < 4; k++) {
-          knots[j] = splitpoint;
-          j++;
-        }
-        knots[j] = knots[j-5] + 2 * delta; j++;
+  /* we assume split point is always at least as large as the first inner knots! */
+  /* inner knots */
+  double nextknot = delta;
+
+  for (int i=0; i < (nik + 1); i++){
+
+    // Rprintf("j=%i; i=%i\n", j, i);
+
+    /* check whether nextknot has to be replaced by the 4 splitpoints */
+    if (((nextknot - 0.5 * delta) < splitpoint) && ((nextknot + 0.5 * delta) >= splitpoint)){
+    /* if ((lastknot < splitpoint) && ((nextknot + delta) >= splitpoint) && */
+    /*     (abs(splitpoint - nextknot) <= abs(delta + nextknot - splitpoint))) { */
+
+      // Rprintf("Splitpoint replaces %f!\n", nextknot);
+
+      /* replace nextknot by splitpoint */
+      for (int k=0; k < 4; k++) {
+        knots[j] = splitpoint;
+        j++;
       }
+
+      nextknot = nextknot + delta;
+
     } else {
-      knots[j] = knots[j-1] + delta;
+      knots[j] = nextknot;
       j++;
+      if (knots[j-1] < splitpoint) {
+        selector++;
+      }
+
+      nextknot = nextknot + delta;
     }
   }
+
+
   // for (int i=0; i< nk; i++) Rprintf("%f; ", knots[i]);
 
 
