@@ -32,6 +32,13 @@ struct callinfo_spl {
 };
 
 
+/* return of function SplitSplineBasis */
+typedef struct split_spl_struct {
+  double *basis;  // pointer to array containing the evaluated basis
+  double *knots;  // full knot sequence used to compute basis
+  int selector;   // selector, specifying which basis function is the
+                  // last one before split point
+} *splitsplPTR;
 
 /* taken from  src/library/stats/src/zeroin.c */
 double R_zeroin2(			/* An estimate of the root */

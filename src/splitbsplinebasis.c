@@ -17,9 +17,9 @@
    A pointer to a double array containing the evaluated basis.
 */
 
-double * SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
+splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 
-  double * res;
+  double * basis;
 
   int order = 4;
   int dderiv = 0;
@@ -73,7 +73,13 @@ double * SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   // for (int i=0; i < lgrd; i++) Rprintf("%f; ", grd[i]);
 
   //Rprintf("nk = %i, lgrd = %i", nk, lgrd);
-  res = spline_basis(knots, order, grd, deriv, nk, lgrd, nd);
+  basis = spline_basis(knots, order, grd, deriv, nk, lgrd, nd);
+
+  splitsplPTR res = (struct split_spl_struct *) R_alloc(1, sizeof(struct split_spl_struct));
+
+  res->basis = basis;
+  res->selector = selector;
+  res->knots = knots;
 
   // for (int i=0; i< lgrd * df; i++) Rprintf("%f; ", res[i]);
   return res;
@@ -83,17 +89,34 @@ double * SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 /* R wrapper */
 SEXP R_SplitSplineBasis(SEXP grd, SEXP df, SEXP splitpoint){
 
-  double * val;
+  splitsplPTR val;
+
+  const char *names[] = {"basis", "selector", "knots", ""};
 
   val = SplitSplineBasis(REAL(grd), *INTEGER(df), *REAL(splitpoint), length(grd));
 
-  SEXP res = PROTECT(allocMatrix(REALSXP, length(grd), *INTEGER(df)));
+  SEXP res = PROTECT(mkNamed(VECSXP,names));
+  SEXP basis = PROTECT(allocMatrix(REALSXP, length(grd), *INTEGER(df)));
+  SEXP selector = PROTECT(allocVector(INTSXP, 1));
+  SEXP knots = PROTECT(allocVector(REALSXP, *INTEGER(df) + 4));
 
+  /* copy content into SEXPs */
+  *INTEGER(selector) = val->selector;
+
+  double * pbasis = REAL(basis);
   for (int i = 0; i < length(grd)* *INTEGER(df); i++){
     //Rprintf("%f; ", val[i]);
-    REAL(res)[i] = val[i];
+    pbasis[i] = val->basis[i];
   }
 
-  UNPROTECT(1);
+  for (int i = 0; i < (*INTEGER(df) + 4); i++){
+    REAL(knots)[i] = val->knots[i];
+  }
+
+  SET_VECTOR_ELT(res, 0 , basis);
+  SET_VECTOR_ELT(res, 1 , selector);
+  SET_VECTOR_ELT(res, 2 , knots);
+
+  UNPROTECT(4);
   return res;
 }
