@@ -31,7 +31,7 @@ test_that("Spline Basis Functions",{
 })
 
 
-test_that("SplitSpline",{
+test_that("SplitSpline - correct basis",{
 
     grd <- seq(0,1, len = 100)
     knots <- sort(c(rep(0,times = 3), rep(1, times = 3),
@@ -39,11 +39,38 @@ test_that("SplitSpline",{
     a <- .Call("R_SplitSplineBasis",
           grd = grd,
           df = 16L,
-          splitpoint = 0.5)
+          splitpoint = 0.5)$basis
     b <- splineDesign(knots = knots, x = grd)
-    matplot(x = grd, y = a, type = "l")
+    ##matplot(x = grd, y = a, type = "l")
 
     expect_equal(a, b)
+
+
+})
+
+
+test_that("SplitSpline - selector", {
+
+    grd <- seq(0,1, by = 0.05)
+
+    for (i in 1:100){
+
+        (splitpoint <- runif(1, min = 0.1, max = 0.9))
+        ## knots <- sort(c(rep(0,times = 3), rep(1, times = 3),
+        ##                 seq(0,1, by = 0.1), rep(splitpoint, times = 3)))
+
+
+        a <- .Call("R_SplitSplineBasis",
+                   grd = grd,
+                   df = 16L,
+                   splitpoint = splitpoint)
+
+        b <- splineDesign(knots = a$knots, x = grd)
+        expect_equal(sum(abs(a$basis-b)), 0)
+
+        expect_equal(sum(a$basis[grd > splitpoint, 1:(a$selector)]), 0)
+        expect_equal(sum(a$basis[grd <= splitpoint, (a$selector+1):16]), 0)
+    }
 
 })
 
@@ -57,7 +84,7 @@ test_that("Spline Model Estimation",{
     basis <- .Call("R_SplitSplineBasis",
                    grd = seq(0,1,len = 100),
                    df = 10L,
-                   splitpoint = 0.5)
+                   splitpoint = 0.5)$basis
 
 
     y <- rnorm(1000)
@@ -89,3 +116,4 @@ test_that("Spline Model Estimation",{
 
     expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
 })
+
