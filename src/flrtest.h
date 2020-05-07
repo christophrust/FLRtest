@@ -24,7 +24,7 @@ struct callinfo_spl {
   double *X;     // pointer to matrix X
   double *y;     // pointer to vector y
   double *Basis; // pointer to matrix containing evaluated B spline basis. Basis has to be
-                 // created using the function SplitModelBasis()
+                 // created using the function SplitSplineBasis()
   int *n;        // pointer to number of obs
   int *p;        // pointer to number of grid points
   int *dim;      // pointer to dimension of the model (number of colums of Basis)
