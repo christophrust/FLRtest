@@ -3,7 +3,7 @@ context("Generating sequence of test statistics")
 
 if (0){
     devtools::load_all()
-}
+
 
 set.seed(123)
 p <- 100
@@ -83,7 +83,7 @@ test_that("c-routine",{
     ##           PACKAGE = "FLRtest"),
     ##     a %*% b)
 })
-
+}
 
 if (0){
     devtools::load_all()
