@@ -54,14 +54,10 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 
   for (int i=0; i < (nik + 1); i++){
 
-    // Rprintf("j=%i; i=%i\n", j, i);
 
     /* check whether nextknot has to be replaced by the 4 splitpoints */
     if (((nextknot - 0.5 * delta) < splitpoint) && ((nextknot + 0.5 * delta) >= splitpoint)){
-    /* if ((lastknot < splitpoint) && ((nextknot + delta) >= splitpoint) && */
-    /*     (abs(splitpoint - nextknot) <= abs(delta + nextknot - splitpoint))) { */
 
-      // Rprintf("Splitpoint replaces %f!\n", nextknot);
 
       /* replace nextknot by splitpoint */
       for (int k=0; k < 4; k++) {
@@ -83,13 +79,7 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   }
 
 
-  // for (int i=0; i< nk; i++) Rprintf("%f; ", knots[i]);
-
-
   /* compute basis */
-  // for (int i=0; i < lgrd; i++) Rprintf("%f; ", grd[i]);
-
-  //Rprintf("nk = %i, lgrd = %i", nk, lgrd);
   basis = spline_basis(knots, order, grd, deriv, nk, lgrd, nd);
 
   splitsplPTR res = (struct split_spl_struct *) R_alloc(1, sizeof(struct split_spl_struct));
@@ -98,7 +88,6 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   res->selector = selector;
   res->knots = knots;
 
-  // for (int i=0; i< lgrd * df; i++) Rprintf("%f; ", res[i]);
   return res;
 }
 
