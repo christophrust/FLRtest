@@ -56,10 +56,17 @@ double * SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int lgrd
    - df: (integer) number of basis functions (dimension of the function space)
    - splitpoint: double value indicating where to split. this not necessarily has to be
          an element of grd but should be and  anything else does not make any sense
-         nor will it change results.
+         nor will it change results. Splitpoint is still part of the first part
+         of the domain.
 
   Output:
-   A pointer to a double array containing the evaluated basis.
+   A pointer to a split_spl_struct (see flrtest.h), inlcuding i.a. a pointer to a
+   double array containing the evaluated basis.
+
+   If splitspoint is smaller than grd[3] (or larger than grd[lgrd-4]), the first
+   (or last) columns of the resulting array contain in the uppermost (lowermost) block
+   a diagonal matrix.
+
 */
 
 splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
