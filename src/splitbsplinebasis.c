@@ -1,6 +1,51 @@
 #include "flrtest.h"
 
 /*
+  helper function to construct an array containing in the first or last columns
+  in the upper (or lower) block an identity matrix.
+
+  Inputs:
+   - grd: a pointer to a double array, containing the full grid values
+   - startvalidx: integer, specifying, at which grid val to start the spline basis
+   - endvalidx: integer, specifying, at which grid val to end the spline basis
+   - lgrd: integer, length of the array grd
+   - df: dimension of the full basis
+
+  Output:
+   - a pointer to a double array of dimension lgrd * df where if startvalidx > 0 the first
+     startvalidx columns will contain in the upper block a diagonal matrix and the...
+ */
+double * SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int lgrd, int df){
+
+  /* initialize return */
+  double * res;
+  res = (double *) R_alloc(lgrd * df, sizeof(double));
+
+  /* some objects necessary for the call of spline_basis */
+  int order = 4;
+  int dderiv = 0;
+  int * deriv = &dderiv;
+  int nd = 1;
+
+  int nk = df + 4 - startvalidx - lgrd + endvalidx - 1;
+  int nik = nk - 8;
+  double *knots;
+  knots = (double *) R_alloc(nk, sizeof(double));
+
+  double delta = (grd[endvalidx]-grd[startvalidx])/(double) (nik + 1);
+
+  /* start and end points of knots */
+  for (int i = 0; i < 4; i++) knots[i] = grd[startvalidx];
+  for (int i = (nk-4); i < nk; i++) knots[i] = grd[endvalidx];
+
+  for (int i = 0; i < nik; i++){
+    knots[i+4] = knots[i+3] + delta;
+  }
+
+}
+
+
+/*
   SplitSplineBasis computes the evaluated basis functions of a cubic spline basis with
   one split point (hence the function space also includes not continouos functions) and
   equidistant knots.
