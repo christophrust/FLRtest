@@ -70,7 +70,8 @@ void internal_crossprod(double *x, int nrx, int ncx,
 double * estmodel_spl(struct callinfo_spl *model, int retbeta);
 // SEXP matmult(SEXP a, SEXP b);
 
-SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP retbeta);
+SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p,
+                    SEXP dim, SEXP selector, SEXP retbeta);
 
 double * spline_basis(double *knots, int order, double *xvals, int *derivs,
                       int nk, int nx, int nd);

@@ -152,7 +152,7 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
 
 
-SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP retbeta) {
+SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP retbeta) {
 
   struct callinfo_spl model;
 
@@ -162,6 +162,7 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP r
   model.n = INTEGER(n);
   model.p = INTEGER(p);
   model.dim = INTEGER(dim);
+  model.selector = *INTEGER(selector);
 
   double *val;
   val = estmodel_spl(&model, *INTEGER(retbeta));
