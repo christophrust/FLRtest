@@ -144,8 +144,9 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
           basis is to be evaluated
    - df: (integer) number of basis functions (dimension of the function space)
    - splitpoint: double value indicating where to split. this not necessarily has to be
-         an element of grd but should be and  anything else does not make any sense
-         nor will it change results. Splitpoint is still part of the first part
+         an element of grd but should be and anything else does not make any sense
+         nor will it change results.
+         Important: Splitpoint is still part of the first part
          of the domain.
 
   Output:
@@ -164,14 +165,19 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 
 
   /* simple spline basis (diagonal block at beginning or end) */
-  if ((splitpoint < grd[4]) | (splitpoint > grd[lgrd-5])) {
+  if ((splitpoint < grd[4]) || (splitpoint > grd[lgrd-5])) {
 
     /* determine startvalidx/envalidx */
     int i = 0, j = 0;
-    while ((splitpoint < grd[i]) | (splitpoint > grd[lgrd-1-j])){
-      j++; i++;
+    while ((splitpoint < grd[4]) && (splitpoint >= grd[i])){
+      i++;
     }
+    while ((splitpoint > grd[lgrd-5]) && (splitpoint < grd[lgrd-1-j])){
+      j++;
+    }
+    
     int startvalidx, endvalidx;
+
     if (i>j) {
       startvalidx = i;
       endvalidx = lgrd-1;
