@@ -17,31 +17,108 @@
  */
 double * SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int lgrd, int df){
 
+  /* either startval or endval may deviate from beginning/end */
+  if (startvalidx * (lgrd - 1 - endvalidx) != 0)
+    error("Identity basis either at beginning OR end of domain!");
+
   /* initialize return */
   double * res;
   res = (double *) R_alloc(lgrd * df, sizeof(double));
 
   /* some objects necessary for the call of spline_basis */
   int order = 4;
-  int dderiv = 0;
-  int * deriv = &dderiv;
+  int deriv = 0;
   int nd = 1;
+  int lgrd_short = endvalidx - startvalidx + 1;
 
-  int nk = df + 4 - startvalidx - lgrd + endvalidx - 1;
+  int dim_id_block = startvalidx + (lgrd - endvalidx - 1);
+  int nk = df + 4 - dim_id_block;
   int nik = nk - 8;
+
   double *knots;
   knots = (double *) R_alloc(nk, sizeof(double));
 
-  double delta = (grd[endvalidx]-grd[startvalidx])/(double) (nik + 1);
+  double delta = (grd[endvalidx] - grd[startvalidx])/(double) (nik + 1);
 
   /* start and end points of knots */
   for (int i = 0; i < 4; i++) knots[i] = grd[startvalidx];
   for (int i = (nk-4); i < nk; i++) knots[i] = grd[endvalidx];
 
+  /* remaining inner knot sequence */
   for (int i = 0; i < nik; i++){
     knots[i+4] = knots[i+3] + delta;
   }
 
+  /* spline basis object */
+  double *basis;
+  basis = (double *) R_alloc(lgrd_short * (nk-4), sizeof(double));
+  basis = spline_basis(knots, order, (grd + startvalidx), &deriv, nk, lgrd_short, nd);
+
+  int resIdx;
+  /* fill final matrix res */
+  if (startvalidx > 0){
+
+    /* fill upper left dim_id_block */
+    for (int i=0; i < pow(dim_id_block,2); i++){
+      resIdx = i + lgrd_short * (i/dim_id_block);
+      if ((i % (dim_id_block + 1)) != 0){
+        res[resIdx] = 1.0;
+      } else {
+        res[resIdx] = 0.0;
+      }
+    }
+
+    /* fill block containing spline basis */
+    for (int i=0; i < (lgrd_short * (nk-4)); i++){
+      resIdx = dim_id_block * (lgrd + 1 + i/(lgrd - dim_id_block)) + i;
+      res[resIdx] = basis[i];
+    }
+
+    /* fill remaining zero blocks */
+    /* block left of basis */
+    for (int i=0; i<(dim_id_block * lgrd_short); i++){
+      resIdx = (i/lgrd_short + 1) * dim_id_block + i;
+      res[resIdx] = 0.0;
+    }
+    /* block above basis */
+    for (int i=0; i<(dim_id_block * (nk-4)); i++){
+      resIdx = lgrd * dim_id_block + (i/dim_id_block) * lgrd_short + i; // integer division!
+      res[resIdx] = 0.0;
+    }
+
+  } else if ((lgrd - 1 - endvalidx) > 0) {
+
+    /* fill upper left block with spline basis */
+    for (int i=0; i < (lgrd_short * (nk-4)); i++){
+      resIdx = (i/lgrd_short) * dim_id_block + i; // integer division!
+      res[resIdx] = basis[i];
+    }
+
+
+    /* fill lower right block with identity matrix */
+    for (int i = 0; i< pow(dim_id_block, 2); i++){
+      resIdx = lgrd * (nk - 4) + (i/dim_id_block + 1) * lgrd_short + i; // integer division!
+      if ((i % (dim_id_block + 1)) != 0){
+        res[resIdx] = 1.0;
+      } else {
+        res[resIdx] = 0.0;
+      }
+    }
+
+    /* fill remaining blocks with zeros */
+
+    /* block right of basis */
+    for (int i=0; i<(dim_id_block * lgrd_short); i++){
+      resIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
+      res[resIdx] = 0.0;
+    }
+    /* block right of basis */
+    for (int i=0; i<(dim_id_block * (nk-4)); i++){
+      resIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
+      res[resIdx] = 0.0;
+    }
+  }
+  return res;
 }
 
 
