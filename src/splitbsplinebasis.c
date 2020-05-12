@@ -90,7 +90,7 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
 
   } else if ((lgrd - 1 - endvalidx) > 0) {
 
-    selector = lgrd_short;
+    selector = nk - 4;
 
     /* fill upper left block with spline basis */
     for (int i=0; i < (lgrd_short * (nk-4)); i++){
