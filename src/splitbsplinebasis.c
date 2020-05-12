@@ -50,58 +50,62 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
   }
 
   /* spline basis object */
-  double *basis;
-  basis = (double *) R_alloc(lgrd_short * (nk-4), sizeof(double));
-  basis = spline_basis(knots, order, (grd + startvalidx), &deriv, nk, lgrd_short, nd);
+  double *spl_basis;
+  spl_basis = (double *) R_alloc(lgrd_short * (nk-4), sizeof(double));
+  spl_basis = spline_basis(knots, order, (grd + startvalidx), &deriv, nk, lgrd_short, nd);
 
-  int resIdx;
-  /* fill final matrix res */
+  int basisIdx, selector;
+  /* fill final matrix basis */
   if (startvalidx > 0){
+
+    selector = dim_id_block;
 
     /* fill upper left dim_id_block */
     for (int i=0; i < pow(dim_id_block,2); i++){
-      resIdx = i + lgrd_short * (i/dim_id_block);
+      basisIdx = i + lgrd_short * (i/dim_id_block);
       if ((i % (dim_id_block + 1)) != 0){
-        res[resIdx] = 1.0;
+        basis[basisIdx] = 1.0;
       } else {
-        res[resIdx] = 0.0;
+        basis[basisIdx] = 0.0;
       }
     }
 
     /* fill block containing spline basis */
     for (int i=0; i < (lgrd_short * (nk-4)); i++){
-      resIdx = dim_id_block * (lgrd + 1 + i/(lgrd - dim_id_block)) + i;
-      res[resIdx] = basis[i];
+      basisIdx = dim_id_block * (lgrd + 1 + i/(lgrd - dim_id_block)) + i;
+      basis[basisIdx] = spl_basis[i];
     }
 
     /* fill remaining zero blocks */
     /* block left of basis */
     for (int i=0; i<(dim_id_block * lgrd_short); i++){
-      resIdx = (i/lgrd_short + 1) * dim_id_block + i;
-      res[resIdx] = 0.0;
+      basisIdx = (i/lgrd_short + 1) * dim_id_block + i;
+      basis[basisIdx] = 0.0;
     }
     /* block above basis */
     for (int i=0; i<(dim_id_block * (nk-4)); i++){
-      resIdx = lgrd * dim_id_block + (i/dim_id_block) * lgrd_short + i; // integer division!
-      res[resIdx] = 0.0;
+      basisIdx = lgrd * dim_id_block + (i/dim_id_block) * lgrd_short + i; // integer division!
+      basis[basisIdx] = 0.0;
     }
 
   } else if ((lgrd - 1 - endvalidx) > 0) {
 
+    selector = lgrd_short;
+
     /* fill upper left block with spline basis */
     for (int i=0; i < (lgrd_short * (nk-4)); i++){
-      resIdx = (i/lgrd_short) * dim_id_block + i; // integer division!
-      res[resIdx] = basis[i];
+      basisIdx = (i/lgrd_short) * dim_id_block + i; // integer division!
+      basis[basisIdx] = spl_basis[i];
     }
 
 
     /* fill lower right block with identity matrix */
     for (int i = 0; i< pow(dim_id_block, 2); i++){
-      resIdx = lgrd * (nk - 4) + (i/dim_id_block + 1) * lgrd_short + i; // integer division!
+      basisIdx = lgrd * (nk - 4) + (i/dim_id_block + 1) * lgrd_short + i; // integer division!
       if ((i % (dim_id_block + 1)) != 0){
-        res[resIdx] = 1.0;
+        basis[basisIdx] = 1.0;
       } else {
-        res[resIdx] = 0.0;
+        basis[basisIdx] = 0.0;
       }
     }
 
@@ -109,15 +113,22 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
 
     /* block right of basis */
     for (int i=0; i<(dim_id_block * lgrd_short); i++){
-      resIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
-      res[resIdx] = 0.0;
+      basisIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
+      basis[basisIdx] = 0.0;
     }
     /* block right of basis */
     for (int i=0; i<(dim_id_block * (nk-4)); i++){
-      resIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
-      res[resIdx] = 0.0;
+      basisIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
+      basis[basisIdx] = 0.0;
     }
   }
+
+  splitsplPTR res = (struct split_spl_struct *) R_alloc(1, sizeof(struct split_spl_struct));
+
+  res->basis = basis;
+  res->selector = selector;
+  res->knots = knots;
+
   return res;
 }
 
