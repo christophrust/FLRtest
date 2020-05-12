@@ -116,9 +116,9 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
       basisIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
       basis[basisIdx] = 0.0;
     }
-    /* block right of basis */
+    /* block below basis */
     for (int i=0; i<(dim_id_block * (nk-4)); i++){
-      basisIdx = lgrd * (nk - 4) + (i/lgrd_short) * dim_id_block + i; // integer division!
+      basisIdx = lgrd_short * (i/dim_id_block + 1) + i;
       basis[basisIdx] = 0.0;
     }
   }
