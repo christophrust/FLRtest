@@ -161,6 +161,30 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 
   double * basis;
 
+
+  /* simple spline basis (diagonal block at beginning or end) */
+  if ((splitpoint < grd[4]) | (splitpoint > grd[lgrd-5])) {
+
+    /* determine startvalidx/envalidx */
+    int i = 0, j = 0;
+    while ((splitpoint < grd[i]) | (splitpoint > grd[lgrd-1-j])){
+      j++; i++;
+    }
+    int startvalidx, endvalidx;
+    if (i>j) {
+      startvalidx = i;
+      endvalidx = lgrd-1;
+    } else {
+      startvalidx = 0;
+      endvalidx = lgrd- 1 - j;
+    }
+
+    splitsplPTR res;
+    res = SimpleSplineBasis(grd, startvalidx, endvalidx, lgrd, df);
+    return res;
+  }
+
+
   int order = 4;
   int dderiv = 0;
   int * deriv = &dderiv;
