@@ -15,15 +15,15 @@
    - a pointer to a double array of dimension lgrd * df where if startvalidx > 0 the first
      startvalidx columns will contain in the upper block a diagonal matrix and the...
  */
-double * SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int lgrd, int df){
+splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int lgrd, int df){
 
   /* either startval or endval may deviate from beginning/end */
   if (startvalidx * (lgrd - 1 - endvalidx) != 0)
     error("Identity basis either at beginning OR end of domain!");
 
   /* initialize return */
-  double * res;
-  res = (double *) R_alloc(lgrd * df, sizeof(double));
+  double * basis;
+  basis = (double *) R_alloc(lgrd * df, sizeof(double));
 
   /* some objects necessary for the call of spline_basis */
   int order = 4;
