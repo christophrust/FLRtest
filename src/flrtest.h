@@ -38,6 +38,7 @@ typedef struct split_spl_struct {
   double *knots;  // full knot sequence used to compute basis
   int selector;   // selector, specifying which basis function is the
                   // last one before split point
+  int nk;         // number of knots
 } *splitsplPTR;
 
 /* taken from  src/library/stats/src/zeroin.c */

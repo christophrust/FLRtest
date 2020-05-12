@@ -128,6 +128,7 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
   res->basis = basis;
   res->selector = selector;
   res->knots = knots;
+  res->nk = nk;
 
   return res;
 }
@@ -251,6 +252,7 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   res->basis = basis;
   res->selector = selector;
   res->knots = knots;
+  res->nk = nk;
 
   return res;
 }
@@ -268,7 +270,7 @@ SEXP R_SplitSplineBasis(SEXP grd, SEXP df, SEXP splitpoint){
   SEXP res = PROTECT(mkNamed(VECSXP,names));
   SEXP basis = PROTECT(allocMatrix(REALSXP, length(grd), *INTEGER(df)));
   SEXP selector = PROTECT(allocVector(INTSXP, 1));
-  SEXP knots = PROTECT(allocVector(REALSXP, *INTEGER(df) + 4));
+  SEXP knots = PROTECT(allocVector(REALSXP, val->nk));
 
   /* copy content into SEXPs */
   *INTEGER(selector) = val->selector;
@@ -279,7 +281,7 @@ SEXP R_SplitSplineBasis(SEXP grd, SEXP df, SEXP splitpoint){
     pbasis[i] = val->basis[i];
   }
 
-  for (int i = 0; i < (*INTEGER(df) + 4); i++){
+  for (int i = 0; i < (val->nk); i++){
     REAL(knots)[i] = val->knots[i];
   }
 
