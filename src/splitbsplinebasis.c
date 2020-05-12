@@ -193,8 +193,7 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 
 
   int order = 4;
-  int dderiv = 0;
-  int * deriv = &dderiv;
+  int deriv = 0;
   int nd = 1;
 
   /* number of knots (=df + 4 as we use cubic splines) */
@@ -251,7 +250,7 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 
 
   /* compute basis */
-  basis = spline_basis(knots, order, grd, deriv, nk, lgrd, nd);
+  basis = spline_basis(knots, order, grd, &deriv, nk, lgrd, nd);
 
   splitsplPTR res = (struct split_spl_struct *) R_alloc(1, sizeof(struct split_spl_struct));
 
