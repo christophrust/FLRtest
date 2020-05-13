@@ -2,7 +2,8 @@
 
 /*
   helper function to construct an array containing in the first or last columns
-  in the upper (or lower) block an identity matrix.
+  in the upper (or lower) block an identity matrix. If the splitpoint is equal to the last
+  grid value, then the basis is just a simple spline basis over [0,1].
 
   Inputs:
    - grd: a pointer to a double array, containing the full grid values
@@ -12,8 +13,14 @@
    - df: dimension of the full basis
 
   Output:
-   - a pointer to a double array of dimension lgrd * df where if startvalidx > 0 the first
-     startvalidx columns will contain in the upper block a diagonal matrix and the...
+   - a pointer to split_spl_struct containing
+     * a double array of dimension lgrd * df where if
+       startvalidx > 0 the first startvalidx columns will contain
+       in the upper block a diagonal matrix and the lower right
+       block the spline basis.
+     * an integer specifying the number of columns of the upper left block
+     * a double array containing the knots used for the spline basis
+     * an integer containing the number all knots
  */
 splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int lgrd, int df){
 
@@ -136,7 +143,7 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
 
 /*
   SplitSplineBasis computes the evaluated basis functions of a cubic spline basis with
-  one split point (hence the function space also includes not continouos functions) and
+  one split point (hence the function space also includes non-continouos functions) and
   equidistant knots.
 
   Inputs:
