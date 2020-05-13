@@ -8,6 +8,10 @@
   Inputs:
    - model: a pointer to a callinfo_spl stuct (defined in flrtest.h) containing all the
        relevant data and model parameters for the fit.
+       The member 'selector' plays a crucial role in the fit as it determines,
+       whether the full model (selector = dim) or whether the small model
+       (in this case, selector must be equal to the selector member of the return of the
+       SplitSplineBasis function)
    - retbeta: if zero, rss and edf are computed otherwise the coefficientfunction
 
   Output:
@@ -41,14 +45,14 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   /* allocate space for necessary intermediate results */
   double *pXB;   // 1/p * X * Basis
-  pXB = (double *) R_alloc( *model->n * *model->dim, sizeof(double));
+  pXB = (double *) R_alloc( *model->n * model->selector, sizeof(double));
 
   /* this in fact will hold pXB'pXB */
   double *XtX;
-  XtX = (double *) R_alloc( *model->dim * *model->dim, sizeof(double));
+  XtX = (double *) R_alloc( model->selector * model->selector, sizeof(double));
 
   double *XtX1Xt;   // 1/p * X * Basis
-  XtX1Xt = (double *) R_alloc( *model->n * *model->dim, sizeof(double));
+  XtX1Xt = (double *) R_alloc( *model->n * model->selector, sizeof(double));
 
   /* compute pXB  (1/p * X %*% B)*/
   //double alpha = 1.0;
@@ -57,24 +61,39 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   double temp = 0.0;
 
+  /*
+    DGEMM 'n', 'n' arguments:
+    C = alpha * A %*% B + beta C
+    rows A/rows C, cols B/cols C, cols A/rows B, alpha, A, rows A, B, cols B,
+    beta, rows C
+  */
 
-  F77_CALL(dgemm)("n", "n", model->n, model->dim, model->p, &alpha,
+  F77_CALL(dgemm)("n", "n", model->n, &model->selector, model->p, &alpha,
                   model->X, model->n, model->Basis, model->p, &beta,
                   pXB, model->n);
 
+
   /* compute XtX*/
-  internal_crossprod(pXB, *model->n, *model->dim, pXB, *model->n, *model->dim, XtX);
+  /* computes C = A'B with
+   A, rows A, cols A, B, rows B, cols B, C*/
+  internal_crossprod(pXB, *model->n, model->selector, pXB,
+                     *model->n, model->selector, XtX);
 
   /* invert XtX using cholesky decomposition */
   int info, ll, ur;
 
-  F77_CALL(dpotrf)("U", model->dim, XtX, model->dim, &info);
+  /*
+    DPOTRF call, version 'U':
+    rows A, A, rows A, info
+
+   */
+  F77_CALL(dpotrf)("U", &model->selector, XtX, &model->selector, &info);
 
   if (info){
     error("Error ocurred during cholesky decomposition, Info = %i!", info);
   } else {
 
-    F77_CALL(dpotri)("U", model->dim, XtX, model->dim, &info);
+    F77_CALL(dpotri)("U", &model->selector, XtX, &model->selector, &info);
   }
 
   if (info){
@@ -83,20 +102,22 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   } else {
 
     // make matrix symmetric
-    for (int j = 0; j<*model->dim; j++){
-      for (int i = j+1; i< *model->dim; i++){
-        ll = j**model->dim + i;
-        ur = i**model->dim + j;
+    for (int j = 0; j < model->selector; j++){
+      for (int i = j+1; i< model->selector; i++){
+        ll = j * model->selector + i;
+        ur = i * model->selector + j;
         XtX[ll] = XtX[ur];
       }
     }
   }
 
+
   // compute XtX^(-1) * Xt
   alpha = 1.0;
-  F77_CALL(dgemm)("n","t", model->dim, model->n,
-                  model->dim, &alpha, XtX, model->dim,
-                  pXB, model->n, &beta, XtX1Xt, model->dim);
+  F77_CALL(dgemm)("n","t", &model->selector, model->n,
+                  &model->selector, &alpha, XtX, &model->selector,
+                  pXB, model->n, &beta, XtX1Xt, &model->selector);
+
 
 
   /* compute splines coefficient: theta = XtX^(-1) %*% Xt %*% y */
@@ -105,13 +126,17 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   for (int i = 0; i < *model->dim; i++){
     temp = 0.0;
-    for (int j = 0; j < *model->n; j++){
-      temp += XtX1Xt[i + j * *model->dim] * model->y[j];
+
+    if (i < model->selector){
+      for (int j = 0; j < *model->n; j++){
+        temp += XtX1Xt[i + j * model->selector] * model->y[j];
+      }
     }
 
     theta[i] = temp;
     // Rprintf("%f;;", temp);
   }
+
 
   if (retbeta){
 
@@ -120,7 +145,7 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
     for (int i = 0; i < *model->p; i++){
       temp = 0.0;
-      for (int j = 0; j < *model->dim; j++){
+      for (int j = 0; j < model->selector; j++){
         temp += model->Basis[i + j * *model->p] * theta[j];
       }
 
@@ -138,13 +163,13 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   for (int i = 0; i < *model->n; i++){
     temp = 0.0;
-    for (int j = 0; j < *model->dim; j++){
+    for (int j = 0; j < model->selector; j++){
       temp += pXB[i + j* *model->n] * theta[j];
     }
     rss += pow(model->y[i] - temp, 2);
   }
   res[1] = rss;
-  res[0] = *model->dim;
+  res[0] = model->selector;
 
   return res;
 }
