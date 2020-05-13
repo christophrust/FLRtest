@@ -49,7 +49,7 @@ test_that("SplitSpline - correct basis",{
 })
 
 
-test_that("SplitSpline - selector", {
+test_that("SplitSpline - sequential split", {
 
     grd <- seq(0,1, by = 0.05)
 
@@ -58,20 +58,60 @@ test_that("SplitSpline - selector", {
         ##(splitpoint <- runif(1, min = 0.1, max = 0.9))
         ## knots <- sort(c(rep(0,times = 3), rep(1, times = 3),
         ##                 seq(0,1, by = 0.1), rep(splitpoint, times = 3)))
-
-        splitpoint <- grd[21]
+        ## splitpoint <- 0.55
         a <- .Call("R_SplitSplineBasis",
                    grd = grd,
                    df = 16L,
                    splitpoint = splitpoint)
 
-        solve(t(a$basis) %*% a$basis)
+        ## test invertibility
+        #expect_true((det(t(a$basis) %*% a$basis) != 0))
 
-        b <- splineDesign(knots = a$knots, x = grd)
-        expect_equal(sum(abs(a$basis-b)), 0)
+        if (splitpoint <grd[5]){
+            rIdx <- which(grd>splitpoint)
+            nrIdx <- which(!(grd>splitpoint))
+            cIdx <- (a$selector+1):ncol(a$basis)
+            ncIdx <- 1:a$selector
+            b <- splineDesign(knots = a$knots, x = grd[rIdx])
+            basis <- a$basis[rIdx,cIdx]
 
-        expect_equal(sum(a$basis[grd >= splitpoint, 1:(a$selector)]), 0)
-        expect_equal(sum(a$basis[grd < splitpoint, (a$selector+1):16]), 0)
+            ## identity block
+            expect_equal(a$basis[nrIdx, ncIdx, drop = FALSE], diag(length(nrIdx)))
+
+        } else if ((splitpoint >grd[length(grd)-4]) && splitpoint <grd[length(grd)]){
+            rIdx <- which(grd<=splitpoint)
+            nrIdx <- which(!(grd<=splitpoint))
+            cIdx <- 1:a$selector
+            ncIdx <- (a$selector+1):ncol(a$basis)
+            b <- splineDesign(knots = a$knots, x = grd[rIdx])
+
+            basis <- a$basis[rIdx,cIdx]
+            ## identity block
+            expect_equal(a$basis[nrIdx, ncIdx, drop = FALSE], diag(length(nrIdx)))
+
+        } else if (isTRUE(all.equal(splitpoint, grd[length(grd)]))){
+            rIdx <- seq_along(grd)
+            nrIdx <- NULL
+            cIdx <- 1:ncol(a$basis)
+            ncIdx <- NULL
+            b <- splineDesign(knots = a$knots, x = grd[rIdx])
+            basis <- a$basis
+        } else {
+            rIdx <- which(grd<=splitpoint)
+            nrIdx <- which(!(grd<=splitpoint))
+            cIdx <- 1:a$selector
+            ncIdx <- (a$selector+1):ncol(a$basis)
+            b <- splineDesign(knots = a$knots, x = grd)
+            basis <- a$basis
+        }
+
+        ## equality of spline basis
+        expect_equal(sum(abs(basis-b)), 0)
+
+
+        ## remaining zero blocks
+        expect_equal(sum(a$basis[nrIdx, cIdx]), 0)
+        expect_equal(sum(a$basis[rIdx, ncIdx]), 0)
     }
 
 })
@@ -116,6 +156,7 @@ test_that("Spline Model Estimation -- Full model",{
                  n = 1000L,
                  p = 100L,
                  dim = 10L,
+                 selector = 10L,
                  retbeta = 0L)[2]
 
     expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
