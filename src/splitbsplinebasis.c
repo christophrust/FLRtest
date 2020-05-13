@@ -175,10 +175,10 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
     while ((splitpoint > grd[lgrd-5]) && (splitpoint < grd[lgrd-1-j])){
       j++;
     }
-    
+
     int startvalidx, endvalidx;
 
-    if (i>j) {
+    if (i > j) {
       startvalidx = i;
       endvalidx = lgrd-1;
     } else {
