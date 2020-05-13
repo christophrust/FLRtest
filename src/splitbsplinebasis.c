@@ -95,7 +95,7 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
       basis[basisIdx] = 0.0;
     }
 
-  } else if ((lgrd - 1 - endvalidx) > 0) {
+  } else if ((lgrd - 1 - endvalidx) >= 0) {
 
     selector = nk - 4;
 
