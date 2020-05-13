@@ -20,7 +20,7 @@
        block the spline basis.
      * an integer specifying the number of columns of the upper left block
      * a double array containing the knots used for the spline basis
-     * an integer containing the number all knots
+     * an integer containing the number of all knots
  */
 splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int lgrd, int df){
 
@@ -229,12 +229,19 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   /* inner knots */
   double nextknot = delta;
 
+  /* make sure that we only replace a knot once in case machine
+     precision fools us. In this case, we are indifferent and take the first knot.
+  */
+  int split_done = 0;
   for (int i=0; i < (nik + 1); i++){
 
 
     /* check whether nextknot has to be replaced by the 4 splitpoints */
-    if (((nextknot - 0.5 * delta) < splitpoint) && ((nextknot + 0.5 * delta) >= splitpoint)){
+    if (((nextknot - 0.5 * delta) < (splitpoint + 1e-15)) &&
+        ((nextknot + 0.5 * delta) >= (splitpoint - 1e-15)) &&
+        (split_done == 0)){
 
+      split_done = 1;
 
       /* replace nextknot by splitpoint */
       for (int k=0; k < 4; k++) {
