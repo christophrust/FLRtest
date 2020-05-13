@@ -121,3 +121,45 @@ test_that("Spline Model Estimation -- Full model",{
     expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
 })
 
+
+
+test_that("Spline Model Estimation -- restricted model",{
+
+    if (0) {
+        devtools::load_all()
+    }
+
+
+    basis <- SplitBasis$basis
+
+    pXB <- 1/dim(X)[2] * X %*% basis[,1:SplitBasis$selector]
+
+    betahat1 <- .Call("R_estmodel_spl",
+                      y = y,
+                      X = X,
+                      basis = basis,
+                      n = 1000L,
+                      p = 100L,
+                      dim = 10L,
+                      selector = as.integer(SplitBasis$selector),
+                      retbeta = 1L)
+
+    (solve(t(pXB) %*% pXB) %*% t(pXB))[1:100]
+
+    betahat2 <- as.vector(basis[,1:SplitBasis$selector] %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)
+
+    plot(betahat1~betahat2, t = "l")
+    expect_equal(betahat1, betahat2)
+
+    rss <- .Call("R_estmodel_spl",
+                 y = y,
+                 X = X,
+                 basis = basis,
+                 n = 1000L,
+                 p = 100L,
+                 dim = 10L,
+                 selector = as.integer(SplitBasis$selector),
+                 retbeta = 0L)[2]
+
+    expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
+})
