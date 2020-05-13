@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# configure script for Rmailer, code based Autoconf script of R-package 'curl' by Jeroen Ooms
+# configure script for FLRtest (add include dirs for lapack, blas, flibs)
 
 PKG_LAPACKLIBS=`${R_HOME}/bin/R CMD config LAPACK_LIBS`
 PKG_BLASLIBS=`${R_HOME}/bin/R CMD config BLAS_LIBS`
