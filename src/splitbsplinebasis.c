@@ -150,9 +150,9 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
    - grd: a pointer to a double array containing the grid values (spanning [0,1]) where the
           basis is to be evaluated
    - df: (integer) number of basis functions (dimension of the function space)
-   - splitpoint: double value indicating where to split. this not necessarily has to be
-         an element of grd but should be and anything else does not make any sense
-         nor will it change results.
+   - splitpoint: double value indicating where to split. If there is a tie with a splitpoint
+         and a grd value, a small number is added to the split point to ensure
+         regularity of the resulting spline matrix.
          Important: Splitpoint is still part of the first part
          of the domain.
 
@@ -198,6 +198,15 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
     return res;
   }
 
+  /*
+    check if there is a tie of splitpoint and a grd value
+    and if this is the case, add a small number to splitpoint
+   */
+  for (int i = 0; i < lgrd; i++){
+    if (abs(splitpoint - grd[i]) < 1e-14){
+      splitpoint += 1e-8;
+    }
+  }
 
   int order = 4;
   int deriv = 0;
@@ -225,8 +234,8 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   */
   int selector = 4;
 
+  /* create inner knot sequence */
   /* we assume split point is always at least as large as the first inner knots! */
-  /* inner knots */
   double nextknot = delta;
 
   /* make sure that we only replace a knot once in case machine
