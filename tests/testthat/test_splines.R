@@ -34,16 +34,16 @@ test_that("Spline Basis Functions",{
 test_that("SplitSpline - correct basis",{
 
     grd <- seq(0,1, len = 100)
-    knots <- sort(c(rep(0,times = 3), rep(1, times = 3),
-                    seq(0,1, by = 0.1), rep(0.5, times = 3)))
+
     a <- .Call("R_SplitSplineBasis",
-          grd = grd,
-          df = 16L,
-          splitpoint = 0.5)$basis
-    b <- splineDesign(knots = knots, x = grd)
+               grd = grd,
+               df = 16L,
+               splitpoint = 0.5)
+
+    b <- splineDesign(knots = a$knots, x = grd)
     ##matplot(x = grd, y = a, type = "l")
 
-    expect_equal(a, b)
+    expect_equal(a$basis, b)
 
 
 })
@@ -59,13 +59,16 @@ test_that("SplitSpline - sequential split", {
         ## knots <- sort(c(rep(0,times = 3), rep(1, times = 3),
         ##                 seq(0,1, by = 0.1), rep(splitpoint, times = 3)))
         ## splitpoint <- 0.55
+        ## splitpoint <- 0.20
         a <- .Call("R_SplitSplineBasis",
                    grd = grd,
                    df = 16L,
                    splitpoint = splitpoint)
 
         ## test invertibility
-        #expect_true((det(t(a$basis) %*% a$basis) != 0))
+        expect_true((det(t(a$basis) %*% a$basis) != 0))
+        ##solve(t(a$basis[1:a$selector,1:a$selector]) %*% a$basis[1:a$selector,1:a$selector])
+
 
         if (splitpoint <grd[5]){
             rIdx <- which(grd>splitpoint)
@@ -78,7 +81,7 @@ test_that("SplitSpline - sequential split", {
             ## identity block
             expect_equal(a$basis[nrIdx, ncIdx, drop = FALSE], diag(length(nrIdx)))
 
-        } else if ((splitpoint >grd[length(grd)-4]) && splitpoint <grd[length(grd)]){
+        } else if ((splitpoint >grd[length(grd)-4]) && (splitpoint <grd[length(grd)])){
             rIdx <- which(grd<=splitpoint)
             nrIdx <- which(!(grd<=splitpoint))
             cIdx <- 1:a$selector
