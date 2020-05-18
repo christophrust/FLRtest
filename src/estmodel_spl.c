@@ -74,6 +74,8 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
       pXB[i] = 1.0;
     }
   }
+
+
   /*
     DGEMM 'n', 'n' arguments:
     C = alpha * A %*% B + beta C

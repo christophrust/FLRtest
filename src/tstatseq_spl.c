@@ -61,7 +61,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
     info.selector = *INTEGER(df);
     fullmodel = estmodel_spl(&info, 0);
 
-    // Rprintf("[%i] df1: %f, df2: %f, lrho: %f\n",j, dfgrho(logrho, &info)+*info.df,fullmodel[0], logrho);
+    // Rprintf("Full: [%i] df: %f, rss: %f\n",j,fullmodel[0], fullmodel[1]);
 
     REAL(res)[j] = fullmodel[0];          // 1st col: rss of full model
     REAL(res)[j + (np-1)] = fullmodel[1]; // 2nd col: edf of full model
@@ -71,6 +71,8 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
 
 
     nullmodel = estmodel_spl(&info, 0);
+
+    // Rprintf("Null: [%i] df: %f, rss: %f\n",j,nullmodel[0], nullmodel[1]);
 
     REAL(res)[j + 2 * (np-1)] = nullmodel[0]; // 3rd col: rss of null model
     REAL(res)[j + 3 * (np-1)] = nullmodel[1]; // 4th col: edf of null model
