@@ -246,8 +246,10 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
 
 
     /* check whether nextknot has to be replaced by the 4 splitpoints */
-    if (((nextknot - 0.5 * delta) < (splitpoint + 1e-15)) &&
-        ((nextknot + 0.5 * delta) >= (splitpoint - 1e-15)) &&
+    if (((splitpoint <= 0.5 * delta ||
+          ((splitpoint > 1 - 0.5 * delta) && i == nik )) ||
+         (((nextknot - 0.5 * delta) < (splitpoint + 1e-15)) &&
+         ((nextknot + 0.5 * delta) >= (splitpoint - 1e-15)))) &&
         (split_done == 0)){
 
       split_done = 1;
