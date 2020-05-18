@@ -43,16 +43,23 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   /* array containing result of estimation */
   double *res;
 
+
+  /* dimension of the full model */
+  //int dim_full = *model->k + model->intercept;
+
+  /* and dimension of potentially small model */
+  int dim = model->selector + model->intercept;
+
   /* allocate space for necessary intermediate results */
   double *pXB;   // 1/p * X * Basis
-  pXB = (double *) R_alloc( *model->n * model->selector, sizeof(double));
+  pXB = (double *) R_alloc( *model->n * dim, sizeof(double));
 
   /* this in fact will hold pXB'pXB */
   double *XtX;
-  XtX = (double *) R_alloc( model->selector * model->selector, sizeof(double));
+  XtX = (double *) R_alloc( dim * dim, sizeof(double));
 
   double *XtX1Xt;   // 1/p * X * Basis
-  XtX1Xt = (double *) R_alloc( *model->n * model->selector, sizeof(double));
+  XtX1Xt = (double *) R_alloc( *model->n * dim, sizeof(double));
 
   /* compute pXB  (1/p * X %*% B)*/
   //double alpha = 1.0;
@@ -61,6 +68,12 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   double temp = 0.0;
 
+  /* include intercept if necessary */
+  if (model->intercept == 1){
+    for (int i=0; i < *model->n; i++) {
+      pXB[i] = 1.0;
+    }
+  }
   /*
     DGEMM 'n', 'n' arguments:
     C = alpha * A %*% B + beta C
@@ -70,14 +83,14 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   F77_CALL(dgemm)("n", "n", model->n, &model->selector, model->p, &alpha,
                   model->X, model->n, model->Basis, model->p, &beta,
-                  pXB, model->n);
+                  pXB + model->intercept * *model->n, model->n);
 
 
   /* compute XtX*/
   /* computes C = A'B with
    A, rows A, cols A, B, rows B, cols B, C*/
-  internal_crossprod(pXB, *model->n, model->selector, pXB,
-                     *model->n, model->selector, XtX);
+  internal_crossprod(pXB, *model->n, dim, pXB,
+                     *model->n, dim, XtX);
 
   /* invert XtX using cholesky decomposition */
   int info, ll, ur;
@@ -87,13 +100,13 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
     rows A, A, rows A, info
 
    */
-  F77_CALL(dpotrf)("U", &model->selector, XtX, &model->selector, &info);
+  F77_CALL(dpotrf)("U", &dim, XtX, &dim, &info);
 
   if (info){
     error("Error ocurred during cholesky decomposition, Info = %i!", info);
   } else {
 
-    F77_CALL(dpotri)("U", &model->selector, XtX, &model->selector, &info);
+    F77_CALL(dpotri)("U", &dim, XtX, &dim, &info);
   }
 
   if (info){
@@ -102,10 +115,10 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   } else {
 
     // make matrix symmetric
-    for (int j = 0; j < model->selector; j++){
-      for (int i = j+1; i< model->selector; i++){
-        ll = j * model->selector + i;
-        ur = i * model->selector + j;
+    for (int j = 0; j < dim; j++){
+      for (int i = j+1; i < dim; i++){
+        ll = j * dim + i;
+        ur = i * dim + j;
         XtX[ll] = XtX[ur];
       }
     }
@@ -114,22 +127,22 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   // compute XtX^(-1) * Xt
   alpha = 1.0;
-  F77_CALL(dgemm)("n","t", &model->selector, model->n,
-                  &model->selector, &alpha, XtX, &model->selector,
-                  pXB, model->n, &beta, XtX1Xt, &model->selector);
+  F77_CALL(dgemm)("n","t", &dim, model->n,
+                  &dim, &alpha, XtX, &dim,
+                  pXB, model->n, &beta, XtX1Xt, &dim);
 
 
 
   /* compute splines coefficient: theta = XtX^(-1) %*% Xt %*% y */
   double *theta;
-  theta = (double *) R_alloc(*model->dim, sizeof(double));
+  theta = (double *) R_alloc(dim, sizeof(double));
 
-  for (int i = 0; i < *model->dim; i++){
+    for (int i = 0; i < dim; i++){
     temp = 0.0;
 
-    if (i < model->selector){
+    if (i < dim){
       for (int j = 0; j < *model->n; j++){
-        temp += XtX1Xt[i + j * model->selector] * model->y[j];
+        temp += XtX1Xt[i + j * dim] * model->y[j];
       }
     }
 
@@ -141,15 +154,21 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   if (retbeta){
 
     /* compute functional coefficient: beta = basis %*% theta */
-    res = (double *) R_alloc(*model->p, sizeof(double));
+    res = (double *) R_alloc(*model->p + model->intercept, sizeof(double));
+
+    /* first entry of returned beta is the constant */
+    if (model->intercept == 1){
+      res[0] = theta[0];
+    }
 
     for (int i = 0; i < *model->p; i++){
       temp = 0.0;
+
       for (int j = 0; j < model->selector; j++){
-        temp += model->Basis[i + j * *model->p] * theta[j];
+        temp += model->Basis[i + j * *model->p] * theta[j + model->intercept];
       }
 
-      res[i] = temp;
+      res[i + model->intercept] = temp;
     }
 
     return res;
@@ -163,13 +182,13 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
   for (int i = 0; i < *model->n; i++){
     temp = 0.0;
-    for (int j = 0; j < model->selector; j++){
+    for (int j = 0; j < dim; j++){
       temp += pXB[i + j* *model->n] * theta[j];
     }
     rss += pow(model->y[i] - temp, 2);
   }
   res[1] = rss;
-  res[0] = model->selector;
+  res[0] = dim;
 
   return res;
 }
@@ -177,7 +196,8 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
 
 
 
-SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP selector, SEXP retbeta) {
+SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP k, SEXP selector,
+                    SEXP intercept, SEXP retbeta) {
 
   struct callinfo_spl model;
 
@@ -186,7 +206,8 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP s
   model.Basis = REAL(basis);
   model.n = INTEGER(n);
   model.p = INTEGER(p);
-  model.dim = INTEGER(dim);
+  model.k = INTEGER(k);
+  model.intercept = *INTEGER(intercept);
   model.selector = *INTEGER(selector);
 
   double *val;
@@ -197,7 +218,7 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP dim, SEXP s
   /* functional coefficient */
   SEXP res;
   if (*INTEGER(retbeta)){
-    res = PROTECT(allocVector(REALSXP, *model.p));
+    res = PROTECT(allocVector(REALSXP, *model.p + model.intercept));
     for (int i = 0; i < *model.p; i++){
       REAL(res)[i] = val[i];
     }
