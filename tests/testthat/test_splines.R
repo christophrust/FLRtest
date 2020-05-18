@@ -127,7 +127,7 @@ SplitBasis <- .Call("R_SplitSplineBasis",
                df = 10L,
                splitpoint = 0.5)
 
-test_that("Spline Model Estimation -- Full model",{
+test_that("Spline Model Estimation -- Full model - no intercept",{
 
     if (0) {
         devtools::load_all()
@@ -144,8 +144,9 @@ test_that("Spline Model Estimation -- Full model",{
                      basis = basis,
                      n = 1000L,
                      p = 100L,
-                     dim = 10L,
+                     k = 10L,
                      selector = 10L,
+                     intercept = 0L,
                      retbeta = 1L)
 
     betahat2 <- as.vector(basis %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)
@@ -160,6 +161,7 @@ test_that("Spline Model Estimation -- Full model",{
                  p = 100L,
                  dim = 10L,
                  selector = 10L,
+                 intercept = 0L,
                  retbeta = 0L)[2]
 
     expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
@@ -167,7 +169,7 @@ test_that("Spline Model Estimation -- Full model",{
 
 
 
-test_that("Spline Model Estimation -- restricted model",{
+test_that("Spline Model Estimation -- restricted model (no intercept)",{
 
     if (0) {
         devtools::load_all()
@@ -186,13 +188,14 @@ test_that("Spline Model Estimation -- restricted model",{
                       p = 100L,
                       dim = 10L,
                       selector = as.integer(SplitBasis$selector),
+                      intercept = 0L,
                       retbeta = 1L)
 
     (solve(t(pXB) %*% pXB) %*% t(pXB))[1:100]
 
     betahat2 <- as.vector(basis[,1:SplitBasis$selector] %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)
 
-    plot(betahat1~betahat2, t = "l")
+    # plot(betahat1~betahat2, t = "l")
     expect_equal(betahat1, betahat2)
 
     rss <- .Call("R_estmodel_spl",
@@ -203,6 +206,95 @@ test_that("Spline Model Estimation -- restricted model",{
                  p = 100L,
                  dim = 10L,
                  selector = as.integer(SplitBasis$selector),
+                 intercept = 0L,
+                 retbeta = 0L)[2]
+
+    expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
+})
+
+
+test_that("Spline Model Estimation -- Full model, with intercept",{
+
+    if (0) {
+        devtools::load_all()
+    }
+
+
+    basis <- SplitBasis$basis
+
+    pXB <- cbind(1, 1/dim(X)[2] * X %*% basis)
+
+    betahat1 <- .Call("R_estmodel_spl",
+                     y = y,
+                     X = X,
+                     basis = basis,
+                     n = 1000L,
+                     p = 100L,
+                     k = 10L,
+                     selector = 10L,
+                     intercept = 1L,
+                     retbeta = 1L)
+
+    theta <- (solve(crossprod(pXB)) %*% t(pXB)) %*% y
+    betahat2 <- c(theta[1], as.vector(basis %*% theta[-1]))
+
+    expect_equal(betahat1, betahat2)
+
+    rss <- .Call("R_estmodel_spl",
+                 y = y,
+                 X = X,
+                 basis = basis,
+                 n = 1000L,
+                 p = 100L,
+                 dim = 10L,
+                 selector = 10L,
+                 intercept = 1L,
+                 retbeta = 0L)[2]
+
+    expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
+})
+
+
+
+test_that("Spline Model Estimation -- restricted model with intercept",{
+
+    if (0) {
+        devtools::load_all()
+    }
+
+
+    basis <- SplitBasis$basis
+
+    pXB <- cbind(1,1/dim(X)[2] * X %*% basis[,1:SplitBasis$selector])
+
+    betahat1 <- .Call("R_estmodel_spl",
+                      y = y,
+                      X = X,
+                      basis = basis,
+                      n = 1000L,
+                      p = 100L,
+                      dim = 10L,
+                      selector = as.integer(SplitBasis$selector),
+                      intercept = 1L,
+                      retbeta = 1L)
+
+    # (solve(t(pXB) %*% pXB) %*% t(pXB))[1:100]
+
+    theta <- (solve(crossprod(pXB)) %*% t(pXB)) %*% y
+    betahat2 <- c(theta[1], as.vector(basis[,1:SplitBasis$selector] %*% theta[-1]))
+
+    # plot(betahat1~betahat2, t = "l")
+    expect_equal(betahat1, betahat2)
+
+    rss <- .Call("R_estmodel_spl",
+                 y = y,
+                 X = X,
+                 basis = basis,
+                 n = 1000L,
+                 p = 100L,
+                 dim = 10L,
+                 selector = as.integer(SplitBasis$selector),
+                 intercept = 1L,
                  retbeta = 0L)[2]
 
     expect_equal(rss, sum((y - pXB %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)^2))
