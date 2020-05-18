@@ -40,7 +40,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
   res = PROTECT(allocMatrix(REALSXP, np-1, 5));
 
   /* containers for intermediate results */
-  double logrho;
+  //double logrho;
   double *fullmodel, *nullmodel;
 
   /* callinfo_spl structure containing all the necessary information for the model fit */
@@ -58,7 +58,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
   for (int j=0; j < (np-1); j++){
 
     /* estimate full model */
-    info.selector = dim;
+    info.selector = *INTEGER(df);
     fullmodel = estmodel_spl(&info, 0);
 
     // Rprintf("[%i] df1: %f, df2: %f, lrho: %f\n",j, dfgrho(logrho, &info)+*info.df,fullmodel[0], logrho);
