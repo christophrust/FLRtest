@@ -83,5 +83,8 @@ SEXP tstatseq_smspl(SEXP y, SEXP X,  SEXP Amats, SEXP p, SEXP n,  SEXP df,
 SEXP R_spline_basis(SEXP knots, SEXP order, SEXP xvals, SEXP derivs);
 
 SEXP R_SplitSplineBasis(SEXP grd, SEXP df, SEXP splitpoint);
+
+SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
+                  SEXP n,  SEXP df, SEXP intercept);
 #endif
 
