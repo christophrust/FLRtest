@@ -219,7 +219,7 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP k, SEXP sel
   SEXP res;
   if (*INTEGER(retbeta)){
     res = PROTECT(allocVector(REALSXP, *model.p + model.intercept));
-    for (int i = 0; i < *model.p; i++){
+    for (int i = 0; i < *model.p + model.intercept; i++){
       REAL(res)[i] = val[i];
     }
     UNPROTECT(1);
