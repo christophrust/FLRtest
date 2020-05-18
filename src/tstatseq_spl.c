@@ -87,7 +87,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
 
 
     if (j < (np-2)){
-      info.Basis += *INTEGER(n) * k;
+      info.Basis += *INTEGER(p) * k;
     }
   }
 
