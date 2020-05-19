@@ -58,7 +58,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
   for (int j=0; j < (np-1); j++){
 
     /* estimate full model */
-    info.selector = *INTEGER(df);
+    info.selector = k;
     fullmodel = estmodel_spl(&info, 0);
 
     // Rprintf("Full: [%i] df: %f, rss: %f\n",j,fullmodel[0], fullmodel[1]);
@@ -67,7 +67,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
     REAL(res)[j + (np-1)] = fullmodel[1]; // 2nd col: edf of full model
 
     /* estimate null model */
-    info.selector = INTEGER(selectors)[j] + intercpt;
+    info.selector = INTEGER(selectors)[j];
 
 
     nullmodel = estmodel_spl(&info, 0);
