@@ -35,7 +35,7 @@
 #' @keywords FDA, smoothing splines, regression
 #'
 #' @export
-EstFLM <- function(y, X, intercept = TRUE, type = "smoothspline", df = NULL, rho = NULL, cpv=NULL){
+EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NULL, cpv=NULL){
 
 
     if (missing(X)) stop("No functional predictors specified.")
