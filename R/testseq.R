@@ -163,6 +163,13 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
               intercept = intercept,
               PACKAGE = "FLRtest")
 
+        colnames(tSeq) <- c("edfFull", "rssFull", "edfNull", "rssNull", "statistic")
+
+
+        ## add column p-Value
+        tSeq <- cbind(tSeq, pval = pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
+                                      df2 = Nobs - tSeq[,"edfFull"], lower.tail = FALSE))
+
     }
     ## return
     tSeq
