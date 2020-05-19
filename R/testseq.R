@@ -42,8 +42,9 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
     }
 
     ## check that obj is estimated by smoothing splines
-    if (!identical(obj$model$type, "smoothspline")){
-        warning("Currently only smoothing spline estimation is supported")
+    if (!identical(obj$model$type, "smoothspline") &&
+        !identical(obj$model$type, "spline")){
+        warning("Currently only smoothing spline and spline estimation is supported!")
     }
 
     if (missing(direction))
@@ -130,21 +131,25 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
                                       df2 = Nobs - tSeq[,"edfFull"], lower.tail = FALSE))
     } else if (obj$model$type == "spline"){
 
-        p <- dim(obj$model$spline$basis)[2]
-        k <- dim(obj$model$spline$basis)[1]
+        p <- dim(obj$model$spline$basis)[1]
+        k <- dim(obj$model$spline$basis)[2]
         grd <- seq(0,1, len = p)
 
         ## create all basis objects and the corresponding selectors
         BasisAndSelectors <- lapply(grd[-p], function(splitpt){
             .Call("R_SplitSplineBasis",
                   grd = grd,
-                  df = k ,
+                  df = as.integer(k) ,
                   splitpoint = splitpt)
         })
 
-        Basis <- vapply(BasisAndSelectors, function(x) x$basis, matrix(0, nrow = p, ncol = k))
+        Basis <- vapply(BasisAndSelectors,
+                        function(x) x$basis,
+                        matrix(0, nrow = p, ncol = k))
 
-        Selectors <- vapply(BasisAndSelectors, function(x) x$selector, 0)
+        Selectors <- vapply(BasisAndSelectors,
+                            function(x) x$selector,
+                            0)
 
         ## Call to the underlying C routine
         tSeq <- .Call("tstatseq_spl",

@@ -82,7 +82,8 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
                 sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
             }
 
-            rho <- exp(uniroot( function(x) {dfGivenRho(x) - df},lower  = -100, upper = 100, f.lower = p,
+            rho <- exp(uniroot( function(x) {dfGivenRho(x) - df},
+                               lower  = -100, upper = 100, f.lower = p,
                                extendInt = "downX")$root)
 
             XtX1Xt <- 1/Nobs * chol2inv( chol( NPXtX + rho * splMat$A_m)) %*% t(X)

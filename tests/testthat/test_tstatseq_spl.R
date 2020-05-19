@@ -1,4 +1,5 @@
 if (0) {
+    devtools::unload()
     devtools::load_all()
 }
 
@@ -63,3 +64,20 @@ test_that("simple call tstatseq_spl",{
 })
 
 
+if (0) {
+    devtools::unload()
+    devtools::load_all()
+}
+
+k <- 10L
+p <- 100L
+N <- 1000L
+intercept <- 1L
+y <- rnorm(N)
+X <- matrix(rnorm(N * p), ncol=p)
+
+res <- EstFLM(y = y, X=X, type = "spline", df = 20)
+plot(res)
+
+debug(testseq)
+testseq(res)
