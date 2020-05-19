@@ -79,7 +79,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
     y <- obj$data$y
 
 
-    if (obj$model$type == "smoothingspline")
+    if (obj$model$type == "smoothspline")
     {
         p <- length(obj$coefficients$beta)
 
@@ -108,7 +108,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
 
 
         ## compute sequence of test statistic
-        tSeq <- .Call("tstatseq",
+        tSeq <- .Call("tstatseq_smspl",
                       y=y,
                       X = X,
                       Amats = Amats,
