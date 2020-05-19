@@ -69,15 +69,20 @@ if (0) {
     devtools::load_all()
 }
 
-k <- 10L
-p <- 100L
-N <- 1000L
-intercept <- 1L
-y <- rnorm(N)
-X <- matrix(rnorm(N * p), ncol=p)
 
-res <- EstFLM(y = y, X=X, type = "spline", df = 20)
-plot(res)
+test_that("Simple Example: testseq",{
 
-debug(testseq)
-testseq(res)
+    k <- 10L
+    p <- 100L
+    N <- 1000L
+    intercept <- 1L
+    y <- rnorm(N)
+    X <- matrix(rnorm(N * p), ncol=p)
+
+    res <- EstFLM(y = y, X=X, type = "spline", df = 20)
+    ## plot(res)
+    ##debug(testseq)
+    pval <- testseq(res)[,6]
+
+    expect_equal(mean(pval < 0.05) < 0.1, TRUE)
+})
