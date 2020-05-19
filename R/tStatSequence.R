@@ -72,59 +72,93 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
     ## RSSfull <- sum(obj$residuals^2)
 
     ## obtain p and rho from fitted model
-    p <- length(obj$coefficients$beta)
     ## rhoEst <- obj$model$rho
     Nobs <- dim(obj$data$X)[1]
     df <- obj$model$effDf
-    X <- if (intercept) cbind(1,obj$data$X) else obj$data$X
     y <- obj$data$y
 
 
-    ## precompute basis and matrix a for all splits
-    ## can be optimized
-    AmSeq <- lapply(3:p, function(k){
-        natSplBasis( seq(0, 1, length= k))$A_m * k/p
-    })
+    if (obj$model$type == "smoothingspline")
+    {
+        p <- length(obj$coefficients$beta)
 
-    mdim <- if (intercept) p + 1 else p
+        X <- if (intercept) cbind(1,obj$data$X) else obj$data$X
 
-    Amats <- vapply(1:p, function(k){
-        Am <- matrix(0, ncol = mdim, nrow = mdim)
-        if (k <3){
-            Am[ (k+1):p + intercept, (k+1):p + intercept] <- AmSeq[[ p-k-2 ]]
-        } else if (k < (p-2)){
-            Am[1:k + intercept, 1:k + intercept] <- AmSeq[[ k-2 ]]
-            Am[(k+1):p + intercept, (k+1):p + intercept] <- AmSeq[[ p-k-2 ]]
-        } else {
-            Am[1:k + intercept, 1:k + intercept] <- AmSeq[[ k-2 ]]
-        }
-        Am
-    }, matrix(0,nrow = mdim, ncol = mdim))
+        ## precompute basis and matrix a for all splits
+        ## can be optimized
+        AmSeq <- lapply(3:p, function(k){
+            natSplBasis( seq(0, 1, length= k))$A_m * k/p
+        })
 
+        mdim <- if (intercept) p + 1 else p
 
-    ## compute sequence of test statistic
-    tSeq <- .Call("tstatseq",
-                  y=y,
-                  X = X,
-                  Amats = Amats,
-                  p = as.integer(p),
-                  n = as.integer(Nobs),
-                  df = obj$model$effDf,
-                  npXtX = obj$model$smspl$npXtX,
-                  tol = as.numeric(tol),
-                  maxit = as.integer(maxit),
-                  intercept = as.integer(intercept),
-                  PACKAGE = "FLRtest")
+        Amats <- vapply(1:p, function(k){
+            Am <- matrix(0, ncol = mdim, nrow = mdim)
+            if (k <3){
+                Am[ (k+1):p + intercept, (k+1):p + intercept] <- AmSeq[[ p-k-2 ]]
+            } else if (k < (p-2)){
+                Am[1:k + intercept, 1:k + intercept] <- AmSeq[[ k-2 ]]
+                Am[(k+1):p + intercept, (k+1):p + intercept] <- AmSeq[[ p-k-2 ]]
+            } else {
+                Am[1:k + intercept, 1:k + intercept] <- AmSeq[[ k-2 ]]
+            }
+            Am
+        }, matrix(0,nrow = mdim, ncol = mdim))
 
 
+        ## compute sequence of test statistic
+        tSeq <- .Call("tstatseq",
+                      y=y,
+                      X = X,
+                      Amats = Amats,
+                      p = as.integer(p),
+                      n = as.integer(Nobs),
+                      df = obj$model$effDf,
+                      npXtX = obj$model$smspl$npXtX,
+                      tol = as.numeric(tol),
+                      maxit = as.integer(maxit),
+                      intercept = as.integer(intercept),
+                      PACKAGE = "FLRtest")
 
-    colnames(tSeq) <- c("edfFull", "rssFull", "edfNull", "rssNull", "logrho", "statistic")
 
 
-    ## add column p-Value
-    tSeq <- cbind(tSeq, pval = pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
-                   df2 = Nobs - tSeq[,"edfFull"], lower.tail = FALSE))
+        colnames(tSeq) <- c("edfFull", "rssFull", "edfNull", "rssNull", "logrho", "statistic")
 
+
+        ## add column p-Value
+        tSeq <- cbind(tSeq, pval = pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
+                                      df2 = Nobs - tSeq[,"edfFull"], lower.tail = FALSE))
+    } else if (obj$model$type == "spline"){
+
+        p <- dim(obj$model$spline$basis)[2]
+        k <- dim(obj$model$spline$basis)[1]
+        grd <- seq(0,1, len = p)
+
+        ## create all basis objects and the corresponding selectors
+        BasisAndSelectors <- lapply(grd[-p], function(splitpt){
+            .Call("R_SplitSplineBasis",
+                  grd = grd,
+                  df = k ,
+                  splitpoint = splitpt)
+        })
+
+        Basis <- vapply(BasisAndSelectors, function(x) x$basis, matrix(0, nrow = p, ncol = k))
+
+        Selectors <- vapply(BasisAndSelectors, function(x) x$selector, 0)
+
+        ## Call to the underlying C routine
+        tSeq <- .Call("tstatseq_spl",
+              y = y,
+              X = obj$data$X,
+              Basis = as.vector(Basis),
+              selectors = as.integer(Selectors),
+              p = as.integer(p),
+              n = as.integer(length(y)),
+              df = as.integer(k + intercept),
+              intercept = intercept,
+              PACKAGE = "FLRtest")
+
+    }
     ## return
     tSeq
 }
