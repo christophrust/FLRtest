@@ -88,11 +88,13 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
                   pXB + model->intercept * *model->n, model->n);
 
 
+
   /* compute XtX*/
   /* computes C = A'B with
-   A, rows A, cols A, B, rows B, cols B, C*/
+   A, rows A, cols A, B, rows B, cols B, C */
   internal_crossprod(pXB, *model->n, dim, pXB,
                      *model->n, dim, XtX);
+
 
   /* invert XtX using cholesky decomposition */
   int info, ll, ur;
