@@ -79,10 +79,16 @@ test_that("Simple Example: testseq",{
     y <- rnorm(N)
     X <- matrix(rnorm(N * p), ncol=p)
 
-    res <- EstFLM(y = y, X=X, type = "spline", df = 20)
-    ## plot(res)
+    res_spl <- EstFLM(y = y, X=X, type = "spline", df = 20)
+    res_smspl <- EstFLM(y = y, X=X, type = "smoothspline", df = 20)
+    ## plot(res_spl)
+    ## plot(res_smspl)
     ##debug(testseq)
-    pval <- testseq(res)[,6]
 
-    expect_equal(mean(pval < 0.05) < 0.1, TRUE)
+    pval_spl <- testseq(res_spl)[,"pval"]
+
+    expect_equal(mean(pval_spl < 0.05) < 0.1, TRUE)
+
+    ## pval_smspl <- testseq(res_smspl)[,"pval"]
+    ## expect_equal(mean(pval_smspl < 0.05) < 0.1, TRUE)
 })
