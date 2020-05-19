@@ -38,7 +38,7 @@ Kong, D., Staicu, A., Maity, A. (2016) Classical Testing in Functional
 Linear Models. Journal of Nonparametric Statistics, \emph{28}(4), 813-838.
 }
 \seealso{
-EstFLM
+EstFLM, GlobalTest
 }
 \author{
 Christoph Rust

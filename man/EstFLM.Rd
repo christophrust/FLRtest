@@ -4,7 +4,7 @@
 \alias{EstFLM}
 \title{EstFLM}
 \usage{
-EstFLM(y, X, intercept = TRUE, type = "smoothspline", df = NULL,
+EstFLM(y, X, intercept = TRUE, type = "spline", df = NULL,
   rho = NULL, cpv = NULL)
 }
 \arguments{
