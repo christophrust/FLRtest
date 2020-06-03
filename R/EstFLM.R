@@ -153,8 +153,12 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
         res <- lm.fit(x = pXBasis, y = y)
 
         ## store resulst
-        beta <- c(res$coefficients[1], basis %*% res$coefficients[-1])
-        effDf <- length(beta)
+        beta <- if (intercept) {
+                    c(res$coefficients[1], basis %*% res$coefficients[-1])
+                } else {
+                    basis %*% res$coefficients
+                }
+        effDf <- length(res$coefficients)
         yHat <- res$fitted
 
     } else{
