@@ -151,6 +151,25 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
                             function(x) x$selector,
                             0)
 
+
+        ## callInfo <- list(y = y, X = obj$data$X, Basis = as.vector(Basis),
+        ##                  selectors = as.integer(Selectors),
+        ##                  p = as.integer(p),
+        ##                  n = as.integer(length(y)),
+        ##                  df = as.integer(k + intercept),
+        ##                  intercept = intercept)
+
+        ## if (file.exists("callInfoLast.RData")){
+        ##     load("callInfoLast.RData")
+
+        ##     if(!all.equal(callInfo, callInfoLast)){
+        ##         stop("Inputs are not equal!!")
+        ##     }
+
+        ## }
+        ## callInfoLast <- callInfo
+        ## save(callInfoLast, file = "callInfoLast.RData")
+
         ## Call to the underlying C routine
         tSeq <- .Call("tstatseq_spl",
               y = y,

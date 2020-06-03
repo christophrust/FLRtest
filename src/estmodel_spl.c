@@ -83,11 +83,59 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
     beta, rows C
   */
 
-  F77_CALL(dgemm)("n", "n", model->n, &model->selector, model->p, &alpha,
+  /* Rprintf("\n\n---------------------------------\nX:\n"); */
+  /* for (int i=0; i< *model->p * *model->n; i++) { */
+  /*   if ((i % 9) == 0) Rprintf("\n"); */
+  /*   Rprintf("%f; ", model->X[i]); */
+  /* } */
+
+  /* Rprintf("\n\n---------------------------------\nB:\n"); */
+  /* for (int i=0; i< *model->p * model->selector; i++) { */
+  /*   if ((i % 9) == 0) Rprintf("\n"); */
+  /*   Rprintf("%f; ", model->Basis[i]); */
+  /* } */
+
+  /* int myselector = model->selector; */
+  /* int * msel; */
+  /* msel = &myselector; */
+
+  //Rprintf("\nSelector: %i\n\n", myselector);
+
+  /* Rprintf("%p vs %p,\n%i and %i\n", (void *) &(model->selector), (void *) &model->selector, */
+  /*         *&model->selector, model->selector); */
+
+  F77_CALL(dgemm)("n", "n", model->n, &(model->selector), model->p, &alpha,
                   model->X, model->n, model->Basis, model->p, &beta,
-                  pXB + model->intercept * *model->n, model->n);
+                  (pXB + model->intercept * *model->n), model->n);
+
+  /* F77_CALL(dgemm)("n", "n", model->n, &model->selector, model->p, &alpha, */
+  /*                 model->X, model->n, model->Basis, model->p, &beta, */
+  /*                 pXB, model->n); */
 
 
+  /* Rprintf("\n\n---------------------------------\nB (last column):\n"); */
+  /* for (int i=0; i< *model->p; i++) { */
+  /*   if ((i % 9) == 0) Rprintf("\n"); */
+  /*   Rprintf("%f; ", model->Basis[i + *model->p * (model->selector - 1)]); */
+  /* } */
+
+  /* double ttt; */
+  /* Rprintf("\n\n---------------------------------\npXB (last column):\n"); */
+  /* for (int i=0; i< *model->n; i++){ */
+  /*   ttt = 0.0; */
+  /*   for (int j=0; j< *model->p; j++){ */
+  /*     ttt += model->X[i + j * *model->n] * */
+  /*       model->Basis[*model->p * (model->selector -1) + j]; */
+  /*   } */
+  /*   if ((i % 10) == 0) Rprintf("\n"); */
+  /*   Rprintf("%f vs %f\n", pXB[i + (dim - 1) * *model->n], ttt * alpha); */
+  /* } */
+
+  /* Rprintf("\n\n---------------------------------\npXB:\n"); */
+  /* for (int i=0; i< dim * *model->n; i++){ */
+  /*   if ((i % 10) == 0) Rprintf("\n"); */
+  /*   Rprintf("%f; ", pXB[i]); */
+  /* } */
 
   /* compute XtX*/
   /* computes C = A'B with
@@ -95,6 +143,8 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   internal_crossprod(pXB, *model->n, dim, pXB,
                      *model->n, dim, XtX);
 
+  //Rprintf("\n\n---------------------------------\nXtX:\n");
+  //for (int i=0; i< dim * dim; i++) Rprintf("%f; ", XtX[i]);
 
   /* invert XtX using cholesky decomposition */
   int info, ll, ur;
@@ -128,6 +178,8 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
     }
   }
 
+  //Rprintf("\n\n---------------------------------\nXtX1:\n");
+  //for (int i=0; i< dim * dim; i++) Rprintf("%f; ", XtX[i]);
 
   // compute XtX^(-1) * Xt
   alpha = 1.0;
@@ -141,7 +193,9 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   double *theta;
   theta = (double *) R_alloc(dim, sizeof(double));
 
-    for (int i = 0; i < dim; i++){
+  /* Rprintf("\n\n---------------------------------\ntheta:\n"); */
+  //for (int i=0; i< dim * dim; i++) Rprintf("%f; ", XtX[i]);
+  for (int i = 0; i < dim; i++){
     temp = 0.0;
 
     if (i < dim){
@@ -151,7 +205,7 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
     }
 
     theta[i] = temp;
-    // Rprintf("%f;;", temp);
+    /* Rprintf("%f; ", temp); */
   }
 
 
@@ -193,6 +247,8 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   }
   res[1] = rss;
   res[0] = dim;
+
+  /* if (model->selector == *model->k) Rprintf("\n\nRSS: %f;", rss); */
 
   return res;
 }

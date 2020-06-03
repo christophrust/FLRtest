@@ -54,6 +54,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
   info.p = INTEGER(p);
   info.intercept = intercpt;
 
+  Rprintf("\n--------------------------------------------\n");
   /* main iteration */
   for (int j=0; j < (np-1); j++){
 
@@ -63,8 +64,8 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
 
     // Rprintf("Full: [%i] df: %f, rss: %f\n",j,fullmodel[0], fullmodel[1]);
 
-    REAL(res)[j] = fullmodel[0];          // 1st col: rss of full model
-    REAL(res)[j + (np-1)] = fullmodel[1]; // 2nd col: edf of full model
+    REAL(res)[j] = fullmodel[0];          // 1st col: edf of full model
+    REAL(res)[j + (np-1)] = fullmodel[1]; // 2nd col: rss of full model
 
     /* estimate null model */
     info.selector = INTEGER(selectors)[j];
@@ -74,8 +75,8 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
 
     // Rprintf("Null: [%i] df: %f, rss: %f\n",j,nullmodel[0], nullmodel[1]);
 
-    REAL(res)[j + 2 * (np-1)] = nullmodel[0]; // 3rd col: rss of null model
-    REAL(res)[j + 3 * (np-1)] = nullmodel[1]; // 4th col: edf of null model
+    REAL(res)[j + 2 * (np-1)] = nullmodel[0]; // 3rd col: edf of null model
+    REAL(res)[j + 3 * (np-1)] = nullmodel[1]; // 4th col: rss of null model
 
     /* compute test statistic: ( (rss0 - rss1)/df1-df0) / (rss1 / (n - df1) */
     REAL(res)[j +4*(np-1)] =
