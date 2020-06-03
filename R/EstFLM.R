@@ -185,7 +185,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
                      spline = if (type == "spline") list(basis = basis,
                                                          lmfit = res) else NULL
                      ),
-        data = list(y=y, X=if (intercept) X[,-1, drop = FALSE] else X)
+        data = list(y=y, X=if (intercept && type == "smoothspline") X[,-1, drop = FALSE] else X)
     )
 
     class(obj) <- "flm"
