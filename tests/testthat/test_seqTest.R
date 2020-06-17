@@ -2,7 +2,7 @@ context("Generating sequence of test statistics")
 
 
 if (0){
-    devtools::load_all()
+    ##devtools::load_all()
 
 
 set.seed(123)
@@ -86,7 +86,7 @@ test_that("c-routine",{
 }
 
 if (0){
-    devtools::load_all()
+    ##devtools::load_all()
     mm <- matrix(rnorm(100), ncol = 10)
     mm1 <- matrix(rnorm(100), ncol = 10)
     A <- tcrossprod(mm)

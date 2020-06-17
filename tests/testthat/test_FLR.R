@@ -1,7 +1,7 @@
-if (0) {
-    devtools::load_all()
-    library(splines)
-}
+## if (0) {
+## devtools::load_all()
+## library(splines)
+## }
 if (1){
     ## simulate some data
     set.seed(123)

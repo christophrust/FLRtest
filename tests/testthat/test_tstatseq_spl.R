@@ -1,7 +1,5 @@
-if (0) {
-    devtools::unload()
-    devtools::load_all()
-}
+## devtools::unload()
+## devtools::load_all()
 
 ##set.seed(1234)
 k <- 10L
@@ -64,10 +62,8 @@ test_that("simple call tstatseq_spl",{
 })
 
 
-if (0) {
-    devtools::unload()
-    devtools::load_all()
-}
+## devtools::unload()
+## devtools::load_all()
 
 
 test_that("Simple Example: testseq",{

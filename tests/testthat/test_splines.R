@@ -1,6 +1,3 @@
-if (0) {
-    devtools::load_all()
-}
 
 context("Spline Basis")
 
@@ -10,7 +7,7 @@ test_that("Spline Basis Functions",{
                     order = 4L,
                     xvals = seq(0,1, len = 10),
                     derivs = 0L)
-    basis2 <- splines::splineDesign(knots = c(0,0,0,0,0.5,1,1,1,1),
+    basis2 <- splineDesign(knots = c(0,0,0,0,0.5,1,1,1,1),
                                     ord = 4L,
                                     x = seq(0,1, len = 10),
                                     derivs = 0L)
@@ -23,7 +20,7 @@ test_that("Spline Basis Functions",{
                     order = 4L,
                     xvals = xvals,
                     derivs = 0L)
-    basis2 <- splines::splineDesign(knots = knots,
+    basis2 <- splineDesign(knots = knots,
                                     ord = 4L,
                                     x = xvals,
                                     derivs = 0L)
@@ -129,9 +126,7 @@ SplitBasis <- .Call("R_SplitSplineBasis",
 
 test_that("Spline Model Estimation -- Full model - no intercept",{
 
-    if (0) {
-        devtools::load_all()
-    }
+    ## devtools::load_all()
 
 
     basis <- SplitBasis$basis
@@ -171,9 +166,8 @@ test_that("Spline Model Estimation -- Full model - no intercept",{
 
 test_that("Spline Model Estimation -- restricted model (no intercept)",{
 
-    if (0) {
-        devtools::load_all()
-    }
+    ## devtools::load_all()
+
 
 
     basis <- SplitBasis$basis
@@ -215,9 +209,9 @@ test_that("Spline Model Estimation -- restricted model (no intercept)",{
 
 test_that("Spline Model Estimation -- Full model, with intercept",{
 
-    if (0) {
-        devtools::load_all()
-    }
+
+    ## devtools::load_all()
+
 
 
     basis <- SplitBasis$basis
@@ -258,9 +252,7 @@ test_that("Spline Model Estimation -- Full model, with intercept",{
 
 test_that("Spline Model Estimation -- restricted model with intercept",{
 
-    if (0) {
-        devtools::load_all()
-    }
+    ##devtools::load_all()
 
 
     basis <- SplitBasis$basis
