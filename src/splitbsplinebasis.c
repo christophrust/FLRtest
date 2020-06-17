@@ -201,6 +201,7 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   /*
     check if there is a tie of splitpoint and a grd value
     and if this is the case, add a small number to splitpoint
+    to make sure that tied grd value belongs to first domain
    */
   for (int i = 0; i < lgrd; i++){
     if (abs(splitpoint - grd[i]) < 1e-14){
@@ -235,7 +236,6 @@ splitsplPTR SplitSplineBasis(double * grd, int df, double splitpoint, int lgrd){
   int selector = 4;
 
   /* create inner knot sequence */
-  /* we assume split point is always at least as large as the first inner knots! */
   double nextknot = delta;
 
   /* make sure that we only replace a knot once in case machine
