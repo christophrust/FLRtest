@@ -43,6 +43,12 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
   //double logrho;
   double *fullmodel, *nullmodel;
 
+  /* allocate space for intermediate matrix results */
+  double *pXB, *XtX, *XtX1Xt;
+  pXB = (double *) R_alloc( *INTEGER(n) * (k + intercpt), sizeof(double));
+  XtX = (double *) R_alloc( (k + intercpt) * (k + intercpt), sizeof(double));
+  XtX1Xt = (double *) R_alloc( *INTEGER(n) * (k + intercpt), sizeof(double));
+
   /* callinfo_spl structure containing all the necessary information for the model fit */
   struct callinfo_spl info;
 
@@ -53,6 +59,9 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
   info.k = &k;
   info.p = INTEGER(p);
   info.intercept = intercpt;
+  info.pXB = pXB;
+  info.XtX = XtX;
+  info.XtX1Xt = XtX1Xt;
 
   /* main iteration */
   for (int j=0; j < (np-1); j++){

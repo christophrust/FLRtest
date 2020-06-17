@@ -51,15 +51,15 @@ double * estmodel_spl(struct callinfo_spl *model, int retbeta){
   int dim = model->selector + model->intercept;
 
   /* allocate space for necessary intermediate results */
-  double *pXB;   // 1/p * X * Basis
-  pXB = (double *) R_alloc( *model->n * dim, sizeof(double));
+  double *pXB = model->pXB;   // 1/p * X * Basis
+  //pXB = (double *) R_alloc( *model->n * dim, sizeof(double));
 
   /* this in fact will hold pXB'pXB */
-  double *XtX;
-  XtX = (double *) R_alloc( dim * dim, sizeof(double));
+  double *XtX = model->XtX;
+  // XtX = (double *) R_alloc( dim * dim, sizeof(double));
 
-  double *XtX1Xt;   // 1/p * X * Basis
-  XtX1Xt = (double *) R_alloc( *model->n * dim, sizeof(double));
+  double *XtX1Xt = model->XtX1Xt;   // 1/p * X * Basis
+  // XtX1Xt = (double *) R_alloc( *model->n * dim, sizeof(double));
 
   /* compute pXB  (1/p * X %*% B)*/
   //double alpha = 1.0;
@@ -205,6 +205,17 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP k, SEXP sel
 
   struct callinfo_spl model;
 
+
+  /* allocate space for intermediate matrix results */
+  double *pXB, *XtX, *XtX1Xt;
+  pXB = (double *) R_alloc( *INTEGER(n) * (*INTEGER(k) + *INTEGER(intercept)),
+                            sizeof(double));
+  XtX = (double *) R_alloc( (*INTEGER(k) + *INTEGER(intercept)) *
+                            (*INTEGER(k) + *INTEGER(intercept)),
+                            sizeof(double));
+  XtX1Xt = (double *) R_alloc( *INTEGER(n) * (*INTEGER(k) + *INTEGER(intercept)),
+                               sizeof(double));
+
   model.X = REAL(X);
   model.y = REAL(y);
   model.Basis = REAL(basis);
@@ -213,6 +224,9 @@ SEXP R_estmodel_spl(SEXP y, SEXP X, SEXP basis, SEXP n, SEXP p, SEXP k, SEXP sel
   model.k = INTEGER(k);
   model.intercept = *INTEGER(intercept);
   model.selector = *INTEGER(selector);
+  model.pXB = pXB;
+  model.XtX = XtX;
+  model.XtX1Xt = XtX1Xt;
 
   double *val;
   val = estmodel_spl(&model, *INTEGER(retbeta));
