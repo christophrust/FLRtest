@@ -42,6 +42,12 @@ dirTest <- function(obj, null, conf.level = 0.95, ...){
     ## find rejections
     rej <- tseq[,"pval"] < (1 - conf.level)
 
+    if (any(!rej)) {
+        ## replace all TRUE after the first FALSE by FALSE
+        rej[which(!rej)[1]:length(rej)] <- FALSE
+    }
+
+
     ## return obj
     obj <- list(rejections = rej, test.sequence = tseq, conf.level = conf.level)
 
