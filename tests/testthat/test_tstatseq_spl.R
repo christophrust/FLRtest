@@ -36,7 +36,7 @@ test_that("simple call tstatseq_spl",{
                selectors = as.integer(Selectors),
                p = p,
                n = N,
-               df = as.integer(k + intercept),
+               df = as.integer(k),
                intercept = intercept)
 
     intercept = 1L
@@ -47,7 +47,7 @@ test_that("simple call tstatseq_spl",{
                selectors = as.integer(Selectors),
                p = p,
                n = N,
-               df = as.integer(k + intercept),
+               df = as.integer(k),
                intercept = intercept)
 
     a_pvals <- pf(a[,5], df1 = a[,1] - a[,3],

@@ -32,7 +32,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
   /* obtain input variables and initialize pointers to these objects */
   int np = INTEGER(p)[0];
   int intercpt = INTEGER(intercept)[0];
-  int k = *INTEGER(df) - intercpt;
+  int k = *INTEGER(df);
 
 
   /* initialize return object */

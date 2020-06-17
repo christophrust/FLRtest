@@ -159,7 +159,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
               selectors = as.integer(Selectors),
               p = as.integer(p),
               n = as.integer(length(y)),
-              df = as.integer(k + intercept),
+              df = as.integer(k),
               intercept = intercept,
               PACKAGE = "FLRtest")
 
