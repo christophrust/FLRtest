@@ -90,7 +90,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
                 sum(vapply(1:Nobs, function(i)  sum(X[i,] * XtX1Xt[,i]),0))/p
             }
 
-            rho <- exp(uniroot( function(x) {dfGivenRho(x) - df},
+            rho <- exp(stats::uniroot( function(x) {dfGivenRho(x) - df},
                                lower  = -100, upper = 100, f.lower = p,
                                extendInt = "downX")$root)
 
@@ -113,7 +113,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
     } else if (type == "fpc"){
 
         ## spectral decomposition
-        Cov <- cov(X)
+        Cov <- stats::cov(X)
         eigendec <- eigen(Cov)
 
         if (!is.null(df)){
@@ -135,7 +135,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
 
 
         ## estimate approx. model
-        lmEst <- .lm.fit(x = if(intercept) cbind(1,scores) else scores,
+        lmEst <- stats::lm.fit(x = if(intercept) cbind(1,scores) else scores,
                          y = y)
         xi <- lmEst$coefficients
         yHat <- (if (intercept) cbind(1,scores) else scores) %*% xi
@@ -158,7 +158,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
         if (intercept) pXBasis <- cbind(1,pXBasis)
 
         ## compute least square estimate
-        res <- lm.fit(x = pXBasis, y = y)
+        res <- stats::lm.fit(x = pXBasis, y = y)
 
         ## store resulst
         beta <- if (intercept) {
