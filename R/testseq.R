@@ -20,10 +20,10 @@
 #' @param gridvals Currently without effect.
 #'
 #' @param maxit The maximum number of iterations in the root finding routine used
-#' to relate the smoothing parameter \equation{\rho} and \code{df}.
+#' to relate the smoothing parameter \deqn{\rho} and \code{df}.
 #'
 #' @param tol Tolerance for the numerical routine used to relate the smoothing
-#' parameter \equation{\rho} and \code{df}.
+#' parameter \deqn{\rho} and \code{df}.
 #'
 #'
 #' @return A matrix with \code{p} rows and 7 columns. The first six columns

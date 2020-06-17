@@ -8,12 +8,20 @@
 #' (one curve per row), assuming an equidistant grid of length
 #' \code{p}.
 #'
-#' @param model A list containing entries \code{type} (either
-#' \code{"smoothspline"} or \code{"fpc"} and \code{df},
-#' the latter controls flexibility of the fit (either number
-#' of eigenfunctions or edf).
-#'
 #' @param intercept Logical, if TRUE, an intercept is included in the model.
+#'
+#' @param type A character specifying, which basis to use. Possible options:
+#' "spline" (default), "smoothspline" or "fpc".
+#'
+#' @param df Degrees of freedom of the model fit. This is either the cardinality of
+#' the underlying basis or it is the edf computed as the trace of the smoother matrix
+#' in the case of smoothing spline estimation.
+#'
+#' @param rho If df is not specified, in the smoothing spline case, also the smoothing
+#' parameter rho can control model flexibility.
+#'
+#' @param cpv For the fpc basis, the cumulative proportion of the explained variance
+#' can be taken to select the number of basis functions.
 #'
 #' @return A list containing estimation results with the
 #' following entries:
