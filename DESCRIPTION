@@ -1,7 +1,7 @@
 Package: FLRtest
 Type: Package
 Title: Directed Test in Functional Linear Regression
-Version: 1.2
+Version: 1.2.1
 Date: 2020-06-17
 Author: Christoph Rust [aut , cre]
 Maintainer: Christoph Rust <christoph.rust@ur.de>
