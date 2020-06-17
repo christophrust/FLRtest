@@ -91,10 +91,10 @@ GlobalTest <- function(obj, null, type="F", intercept = TRUE){
         ## if spline basis, replace s_n by effDf
 
         if (missing(null)){
-            pval <- 1 - pf(Tf, df1 = df1, df2 = df2)
+            pval <- 1 - stats::pf(Tf, df1 = df1, df2 = df2)
         } else {
-            ncp <- 1/p^2 * (t(beta0) %*% cov(obj$data$X) %*% beta0)
-            pval <- 1 - pf(Tf, df1 = df1, df2 = df2, ncp = ncp)
+            ncp <- 1/p^2 * (t(beta0) %*% stats::cov(obj$data$X) %*% beta0)
+            pval <- 1 - stats::pf(Tf, df1 = df1, df2 = df2, ncp = ncp)
         }
     } else {
         stop("Currently only the F-test is supported!")

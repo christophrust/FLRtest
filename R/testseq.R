@@ -127,7 +127,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
 
 
         ## add column p-Value
-        tSeq <- cbind(tSeq, pval = pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
+        tSeq <- cbind(tSeq, pval = stats::pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
                                       df2 = Nobs - tSeq[,"edfFull"], lower.tail = FALSE))
     } else if (obj$model$type == "spline"){
 
@@ -167,7 +167,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
 
 
         ## add column p-Value
-        tSeq <- cbind(tSeq, pval = pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
+        tSeq <- cbind(tSeq, pval = stats::pf(tSeq[,"statistic"], df1 = tSeq[,"edfFull"] - tSeq[,"edfNull"],
                                       df2 = Nobs - tSeq[,"edfFull"], lower.tail = FALSE))
 
     }
