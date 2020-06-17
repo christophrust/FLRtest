@@ -61,7 +61,8 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
   spl_basis = (double *) R_alloc(lgrd_short * (nk-4), sizeof(double));
   spl_basis = spline_basis(knots, order, (grd + startvalidx), &deriv, nk, lgrd_short, nd);
 
-  int basisIdx, selector;
+  int basisIdx = 0, selector = 0;
+
   /* fill final matrix basis */
   if (startvalidx > 0){
 
