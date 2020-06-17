@@ -149,7 +149,8 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
     } else if (type == "spline") {
 
         ## create basis
-        basis <- bs(x = grd, df = df, intercept = FALSE)
+        knots <- c(0,0,0,seq(0,1, length.out = df - 2),1,1,1)
+        basis <- splines::splineDesign(knots = knots, x = grd)
 
         ## product of X and basis
         pXBasis <- 1/p * X %*% basis
