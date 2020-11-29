@@ -109,7 +109,7 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
 
         ## compute sequence of test statistic
         tSeq <- .Call("tstatseq_smspl",
-                      y=y,
+                      y = y,
                       X = X,
                       Amats = Amats,
                       p = as.integer(p),
@@ -132,7 +132,12 @@ testseq <- function(obj, null, startval, direction, gridvals = NULL,
     } else if (obj$model$type == "spline"){
 
         p <- dim(obj$model$spline$basis)[1]
-        k <- dim(obj$model$spline$basis)[2]
+        k <- dim(obj$model$spline$basis)[2]+2
+        if (k < 8) {
+            warning("For the test to work properly, df must be at least 6!\n",
+                    "All splitted models will use 8 degrees of freedom!")
+            k <- 8
+        }
         grd <- seq(0,1, len = p)
 
         ## create all basis objects and the corresponding selectors

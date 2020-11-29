@@ -1,5 +1,5 @@
 void internal_crossprod(double *x, int nrx, int ncx,
-                               double *y, int nry, int ncy, double *z)
+                        double *y, int nry, int ncy, double *z)
 {
   double sum;
 #define CROSSPROD_BODY                          \
