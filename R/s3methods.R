@@ -16,13 +16,22 @@ print.flm.test <- function(x,...){
 
     } else  if (attr(x, which = "test.type") == "directed"){
 
+      if (any(x$rej)){
         pm <- max(which(x$rej))
 
         cat("Directed test of association in the functional linear model\n")
         cat("-----------------------------------------------------------\n")
         cat(sprintf(
-            "Significant influence up to grid index %i.\nThis corresponds to %.2f in normalized domain\n", pm, seq(0,1, len = length(x$rej +1))[pm]
-))
+          "Significant influence up to grid index %i.\nThis corresponds to %.2f in normalized domain\n",
+          pm, seq(0,1, len = length(x$rej +1))[pm]
+        ))
+      } else {
+          cat("Directed test of association in the functional linear model\n")
+        cat("-----------------------------------------------------------\n")
+        cat(sprintf(
+          "The test did not reject at all!\n"))
+      }
+
         cat(sprintf("Significance level used: %.2f\n", 1-x$conf.level))
     }
 }
