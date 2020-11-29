@@ -37,6 +37,47 @@ print.flm.test <- function(x,...){
 }
 
 
+#' @export
+plot.flm.test <- function(x,...){
+
+    p <- length(x$rejections) + 1
+    X <- x$obj$data$X
+    y <- x$obj$data$y
+
+    grd <- seq(0,1, length.out = p)
+
+    if (any(x$rejections)) {
+
+        pm <- max(which(x$rejections))
+
+        df <- max(x$obj$model$spline$basis,8)
+
+        basis <- .Call("R_SplitSplineBasis",
+                       grd = grd,
+                       df = as.integer(df) ,
+                       splitpoint = grd[pm])$basis
+        pXB <- 1/dim(X)[2] * X %*% basis
+
+        betahat <- as.vector(basis %*% (solve(crossprod(pXB)) %*% t(pXB)) %*% y)
+
+        plot(x = NULL, y = NULL, xlim = c(0,1), ylim = range(betahat),
+             xlab = "Normalized domain", ylab = expression(paste(beta, "-function")))
+        polygon(x = c(0, grd[pm],grd[pm],0), y = c(rep(par("usr")[3:4], each = 2)),
+                col = "lightgrey")
+        abline(h = 0, lty = 3)
+        lines(x = grd[1:pm], y = betahat[1:pm], col = "#444444", lwd = 4)
+        lines(x = grd[(pm+1):p], y = betahat[(pm+1):p], col = "#d2d2d2", lwd = 2, lty = 2)
+
+    } else {
+
+
+        betahat <- x$obj$coefficients$beta
+
+        plot(x = grd, y = betahat, lty = 2, col = "#b2b2b2", lwd = 2, type = "l",
+             xlab = "Normalized domain", ylab = expression(paste(beta, "-function")))
+    }
+}
+
 
 #' @export
 summary.flm.test <- function(object,...){
@@ -49,7 +90,7 @@ summary.flm.test <- function(object,...){
 #' @export
 plot.flm <- function(x,...){
 
-    cat("Yet to be implemented...\n")
+    cat("Plotting method yet not fully implemented...\n")
     graphics::plot(x = seq(0,1,length.out = length(x$coefficients$beta)),
          y = x$coefficients$beta, type = "l")
 }

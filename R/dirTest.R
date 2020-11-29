@@ -49,7 +49,7 @@ dirTest <- function(obj, null, conf.level = 0.95, ...){
 
 
     ## return obj
-    obj <- list(rejections = rej, test.sequence = tseq, conf.level = conf.level)
+    obj <- list(rejections = rej, test.sequence = tseq, conf.level = conf.level, obj = obj)
 
     class(obj) <- "flm.test"
     attr(obj, which = "test.type") <- "directed"
