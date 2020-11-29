@@ -38,6 +38,7 @@ splitsplPTR SimpleSplineBasis(double *grd, int startvalidx, int endvalidx, int l
   int nd = 1;
   int lgrd_short = endvalidx - startvalidx + 1;
 
+  /* dimension of identity block, number of knots and inner knots of spline basis block */
   int dim_id_block = startvalidx + (lgrd - endvalidx - 1);
   int nk = df + 4 - dim_id_block;
   int nik = nk - 8;

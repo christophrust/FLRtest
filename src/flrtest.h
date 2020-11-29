@@ -46,13 +46,13 @@ typedef struct split_spl_struct {
 } *splitsplPTR;
 
 /* taken from  src/library/stats/src/zeroin.c */
-double R_zeroin2(			/* An estimate of the root */
-    double ax,				/* Left border | of the range	*/
-    double bx,				/* Right border| the root is seeked*/
-    double fa, double fb,		/* f(a), f(b) */
-    double (*f)(double x, void *info),	/* Function under investigation	*/
-    void *info,				/* Add'l info passed on to f	*/
-    double *Tol,			/* Acceptable tolerance		*/
+double R_zeroin2(     /* An estimate of the root */
+    double ax,        /* Left border | of the range */
+    double bx,        /* Right border| the root is seeked*/
+    double fa, double fb, /* f(a), f(b) */
+    double (*f)(double x, void *info), /* Function under investigation */
+    void *info,       /* Add'l info passed on to f */
+    double *Tol,      /* Acceptable tolerance */
     int *Maxit);
 
 
