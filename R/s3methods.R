@@ -68,6 +68,8 @@ plot.flm.test <- function(x,...){
         lines(x = grd[1:pm], y = betahat[1:pm], col = "#444444", lwd = 4)
         lines(x = grd[(pm+1):p], y = betahat[(pm+1):p], col = "#d2d2d2", lwd = 2, lty = 2)
 
+        return(invisible(list(beta = betahat, x = grd, lastidx = pm)))
+
     } else {
 
 
