@@ -7,7 +7,7 @@ Author: Christoph Rust [aut , cre]
 Maintainer: Christoph Rust <christoph.rust@ur.de>
 Description: This package provides an implementation for the directed testing procedure described in Rust, C. (2021).
 License: GPL-3 + file LICENSE
-Depends: R (>= 3.1.0) , splines
+Depends: R (>= 3.5.0) , splines
 Suggests: testthat
 NeedsCompilation: yes
 Encoding: UTF-8

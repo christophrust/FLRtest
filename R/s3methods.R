@@ -36,7 +36,7 @@ print.flm.test <- function(x,...){
     }
 }
 
-
+#' @importFrom graphics abline lines par polygon
 #' @export
 plot.flm.test <- function(x,...){
 
