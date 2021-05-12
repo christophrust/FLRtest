@@ -1,7 +1,7 @@
 # Directed Local Testing in the Functional Linear Model
 
 This R package implements the testing procedure described in the manuscript 
-[Directed Local Testing in the Functional Linear Model](https://christophrust.de/manuscrtipts/DLTFLR.pdf).
+[Directed Local Testing in the Functional Linear Model](https://christophrust.de/manuscripts/DLTFLR.pdf).
 
 ## Installation
 
