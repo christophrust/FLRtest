@@ -5,14 +5,14 @@ This R package implements the testing procedure described in the manuscript
 
 ## Installation
 
-``` s-plus
+```splus
 devtools::install_github("https://github.com/christophrust/FLRTest.git")
 ```
 
 
 ## Example
 
-``` s-plus
+```splus
 set.seed(123)
 
 ## number of discretization points
