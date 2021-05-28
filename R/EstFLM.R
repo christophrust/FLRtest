@@ -63,7 +63,7 @@ EstFLM <- function(y, X, intercept = TRUE, type = "spline", df = NULL, rho = NUL
 
 
         if (intercept){
-            X <- cbind(1,X)
+            X <- cbind(p,X)
             splMat$A_m <- rbind( 0, cbind(0, splMat$A_m))
         }
 
