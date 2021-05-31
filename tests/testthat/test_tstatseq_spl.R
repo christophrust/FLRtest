@@ -88,3 +88,73 @@ test_that("Simple Example: testseq",{
     ## pval_smspl <- testseq(res_smspl)[,"pval"]
     ## expect_equal(mean(pval_smspl < 0.05) < 0.1, TRUE)
 })
+
+
+
+test_that("Tstatseq_spl vs manual",{
+
+  k <- 10L
+  p <- 100L
+  N <- 1000L
+  intercept <- 1L
+  y <- rnorm(N)
+  X <- matrix(rnorm(N * p), ncol=p)
+
+  grd <- seq(0,1,len = p)
+
+
+  BasisAndSelectors <- lapply(grd[-p], function(splitpt){
+    .Call("R_SplitSplineBasis",
+          grd = grd,
+          df = k ,
+          splitpoint = splitpt)
+  })
+
+  Basis <- vapply(BasisAndSelectors, function(x) x$basis, matrix(0, nrow = p, ncol = k))
+  Selectors <- vapply(BasisAndSelectors, function(x) x$selector, 0)
+
+  res_spl <- EstFLM(y = y, X=X, type = "spline", df = 20)
+  res1 <- .Call("tstatseq_spl",
+             y = y,
+             X = X,
+             Basis = as.vector(Basis),
+             selectors = as.integer(Selectors),
+             p = p,
+             n = N,
+             df = as.integer(k),
+             intercept = intercept)
+
+  res2 <- t(vapply(BasisAndSelectors, function(x){
+
+    null <- .Call("R_estmodel_spl",
+                  y = y,
+                  X = X,
+                  basis = x$basis,
+                  n = N,
+                  p = p,
+                  k = k,
+                  selector = as.integer(x$selector),
+                  intercept = 1L,
+                  retbeta = 0L)
+
+
+    full <- .Call("R_estmodel_spl",
+                  y = y,
+                  X = X,
+                  basis = x$basis,
+                  n = N,
+                  p = p,
+                  k = k,
+                  selector = as.integer(ncol(x$basis)),
+                  intercept = 1L,
+                  retbeta = 0L)
+
+    df1 <- (full[1] - null[1])
+    df2 <- N - full[1]
+    c(full[1], full[2], null[1], null[2], ((null[2] - full[2])/df1) / (full[2]/df2))
+
+  }, numeric(5)))
+
+  expect_equal(res1[,5], res2[,5])
+
+})
