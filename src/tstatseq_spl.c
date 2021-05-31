@@ -91,7 +91,7 @@ SEXP tstatseq_spl(SEXP y, SEXP X,  SEXP Basis, SEXP selectors, SEXP p,
       ( (REAL(res)[j +3*(np-1)] - REAL(res)[j +1*(np-1)]) /
         (REAL(res)[j +0*(np-1)] - REAL(res)[j +2*(np-1)])) /
       (REAL(res)[j +1*(np-1)] /
-       ( (double) *INTEGER(n) - REAL(res)[j +2*(np-1)]));
+       ( (double) *INTEGER(n) - REAL(res)[j +0*(np-1)]));
 
 
 
