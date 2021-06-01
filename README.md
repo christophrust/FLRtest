@@ -23,11 +23,13 @@ N <- 1000
 
 ## draw some curves
 grd <- seq(0,1,length = p)
-X <- t(bs(x= grd, df = p, intercept = TRUE) %*% matrix(rnorm(N*p), ncol = N))
+X <- t(c(1,1:(p-1))^(-1.5) *
+  vapply(1:p, function(j) sqrt(2) * cos((j-1) * pi * grd), numeric(p)) %*%
+  matrix(rnorm(N * p), ncol = N))
 
 ## generate data via the functional linear model
 beta <- pmax(sin(5*grd), 0)
-y <- X %*% beta/p + rnorm(N, sd=0.1)
+y <- X %*% beta/p + rnorm(N, sd=0.01)
 
 ## estimate a FLM and perform the test
 est  <- EstFLM(y, X, type = "spline", df=20, intercept = TRUE)
